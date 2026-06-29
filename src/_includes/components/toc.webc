@@ -1,9 +1,0 @@
-<!-- Table of Contents Component -->
-<aside id="toc" class="hidden lg:block w-64 flex-shrink-0">
-  <div class="fixed top-24">
-    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Contents</h3>
-    <ul id="toc-list" class="space-y-2 text-sm border-l border-gray-200 dark:border-gray-700 pl-4">
-      <!-- 动态生成的目录项 -->
-    </ul>
-  </div>
-</aside>

@@ -1,5 +1,0 @@
-<a :href="metadata.source + '/commit/' + metadata.commitSha.full" webc:if="metadata.commitSha"
-    class="mr-2 text-gray-400 transition-colors">
-    <i class="fa-solid fa-code-commit"></i>
-    <span @text="metadata.commitSha.short"></span>
-</a>

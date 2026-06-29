@@ -1,8 +1,8 @@
-#import "@local/wslib:0.1.0": *
+#import "../mod.typ": *
 #show: wstemplate.with(
   title: "Paiagram 0: Foundations",
   description: "What technologies I used in the app.",
-  created: "2025-12-14",
+  created: datetime(year: 2025, month: 12, day: 14),
   layout: "layout.webc",
   tags: ("egui", "rust", "paiagram"),
   author: "Jeremy Gao",
@@ -73,9 +73,9 @@ other features that are mentioned repetitively, like memory safety and performan
 typst plugins using rust. Inherently, I continued with Rust.
 
 Rust's strength not only stops at web, memory safety, and performance. It also has a diverse ecosystem and one of the
-best package managers: Cargo. There is no need to memorize ten CMake flags then realizing that you also have to
-install compiled binaries for the next program would use it. All you have to do is `cargo run` and, with the right
-libraries installed, your program just automatically runs.
+best package managers: Cargo. There is no need to memorize ten CMake flags then realizing that you also have to install
+compiled binaries for the next program would use it. All you have to do is `cargo run` and, with the right libraries
+installed, your program just automatically runs.
 
 We have a language now, but what can we draw on the canvas?
 

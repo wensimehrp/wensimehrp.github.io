@@ -1,8 +1,8 @@
-#import "@local/wslib:0.1.0": *
+#import "../mod.typ": *
 #show: wstemplate.with(
   title: "Bad Typple",
   description: "Bad Apple with Typst",
-  created: "2025-09-21",
+  created: datetime(year: 2025, month: 09, day: 21),
   tags: ("Typst",),
   author: "Jeremy Gao",
 )

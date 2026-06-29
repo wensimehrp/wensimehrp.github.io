@@ -1,11 +1,11 @@
-#import "@local/wslib:0.1.0": *
+#import "../mod.typ": *
 #show: wstemplate.with(
   layout: "layout.webc",
   title: "2025 Summary",
   description: "What did I do in 2025???",
-  created: "2026-02-26",
+  created: datetime(year: 2026, month: 02, day: 26),
   tags: (),
-  author: "Jeremy Gao",
+  author: jeremy-gao,
 )
 
 Hmm, I didn't realize that it's almost March. I guess their theory is true then -- the older you are, the faster you
