@@ -3,9 +3,8 @@
   title: "Paiagram 0: Foundations",
   description: "What technologies I used in the app.",
   created: datetime(year: 2025, month: 12, day: 14),
-  layout: "layout.webc",
   tags: ("egui", "rust", "paiagram"),
-  author: "Jeremy Gao",
+  author: jeremy-gao,
 )
 
 _This post is part of the series of dev diaries about Paiagram, an application for creating and visualizing transport

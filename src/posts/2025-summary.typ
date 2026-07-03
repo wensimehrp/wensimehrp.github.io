@@ -1,6 +1,5 @@
 #import "../mod.typ": *
 #show: wstemplate.with(
-  layout: "layout.webc",
   title: "2025 Summary",
   description: "What did I do in 2025???",
   created: datetime(year: 2026, month: 02, day: 26),

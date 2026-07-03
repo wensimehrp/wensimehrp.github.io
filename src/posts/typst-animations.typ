@@ -1,11 +1,10 @@
 #import "../mod.typ": *
 #show: wstemplate.with(
-  layout: "layout.webc",
   title: "Animations with Typst",
   description: "A.K.A. Typst with FFmpeg, or Tanim.",
   created: datetime(year: 2025, month: 09, day: 14),
   tags: ("Typst", "tools", "FFmpeg"),
-  author: "Jeremy Gao",
+  author: jeremy-gao,
 )
 
 Typst is a great typesetting tool. It's also great as a drawing tool. Reviewing its history of #{

@@ -1,11 +1,10 @@
 #import "../mod.typ": *
 #show: wstemplate.with(
-  layout: "layout.webc",
   title: "Transitioning to Typst",
   description: "Hey, are you one of the Typst dudes?",
   created: datetime(year: 2025, month: 09, day: 09),
   tags: ("Typst", "tools", "typesetting"),
-  author: "Jeremy Gao",
+  author: jeremy-gao,
 )
 
 I've been using typst for a while, even using it to generate my blog site (as you can see). It is a great tool, with a

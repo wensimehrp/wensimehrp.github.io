@@ -4,7 +4,7 @@
   description: "Bad Apple with Typst",
   created: datetime(year: 2025, month: 09, day: 21),
   tags: ("Typst",),
-  author: "Jeremy Gao",
+  author: jeremy-gao,
 )
 
 #elink("https://github.com/WenSimEHRP/bad-typple").
