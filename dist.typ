@@ -16,23 +16,26 @@
 }
 
 #context {
-  asset("styles.css",
+  asset(
+    "styles.css",
     ```css
     :root {
         scroll-behavior: smooth;
     }
-    ```.text + str(_plugin.generate(
-    bytes(
-      tailwind-classes.final().join(" ") + "",
-    ),
-    cbor.encode((
-      preflight: (
-        full: (
-          font_family_sans: "Nunito",
+    ```.text
+      + str(_plugin.generate(
+        bytes(
+          tailwind-classes.final().join(" ") + "",
         ),
-      ),
-    )),
-  )))
+        cbor.encode((
+          preflight: (
+            full: (
+              font_family_sans: "Nunito",
+            ),
+          ),
+        )),
+      )),
+  )
 }
 
 #let basic(c, page-title: none) = {
@@ -107,20 +110,45 @@
   ) #post.label
 ]
 
-#let format-link(post) = {
-  html.div(class: "[&>a]:flex [&>a]:no-underline mb-5 transition-all hover:shadow-[0_0.25rem_0_0_gray]", (
-    link(post.label, {
-      post.title
-      html.span(class: "ml-auto", post.created.display("[month repr:short]. [day], [year]"))
-    })
-  ))
-  parbreak()
-}
+#let format-link(post) = link(post.label, {
+  post.title
+  html.span(class: "ml-auto", post.created.display("[month repr:short]. [day], [year]"))
+})
+
+#document(
+  "connections.html",
+  basic(page-title: [Connections])[
+    #title[Connections]
+    #let connections = toml("connections.toml").connections
+    #(
+      connections
+        .map(ent => html.div(
+          class: "mb-5 [&_a]:block [&_a]:no-underline [&_a]:hover:shadow-[0_0.25rem_0_0_gray] [&_a]:transition-shadow",
+          link(
+            ent.link,
+            {
+              html.span(class: "block", heading(level: 2, ent.title))
+              ent.description
+            },
+          ),
+        ))
+        .join()
+    )
+  ],
+) <connections>
 
 #document(
   "index.html",
   basic(page-title: [The Gao Log])[
     #title[The Gao Log]
-    #posts.map(format-link).join[]
+    #let urls = (
+      ("https://wensimehrp.github.io/tfvindex", [TFVIndex Icon Site]),
+      ("https://paiagram.com", [Paiagram]),
+      (<connections>, [Connections]),
+    )
+    #html.div(
+      class: "[&_a]:flex [&_a]:no-underline [&_a]:hover:shadow-[0_0.25rem_0_0_gray] [&_a]:transition-shadow",
+      (urls.map(it => link(..it)) + posts.map(format-link)).join(parbreak()),
+    )
   ],
 )
