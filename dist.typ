@@ -16,7 +16,12 @@
 }
 
 #context {
-  asset("styles.css", _plugin.generate(
+  asset("styles.css",
+    ```css
+    :root {
+        scroll-behavior: smooth;
+    }
+    ```.text + str(_plugin.generate(
     bytes(
       tailwind-classes.final().join(" ") + "",
     ),
@@ -27,7 +32,7 @@
         ),
       ),
     )),
-  ))
+  )))
 }
 
 #let basic(c, page-title: none) = {
@@ -40,6 +45,11 @@
       style(
         "@import url('https://fonts.googleapis.com/css2?family=Libertinus+Serif+Display&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');",
       )
+      elem("script", attrs: (
+        defer: "",
+        src: "https://cloud.umami.is/script.js",
+        data-website-id: "1e645081-beea-4836-bd66-ead28c2c1976",
+      ))
       title(page-title)
     })
     body(class: "bg-stone-100 dark:bg-zinc-800", {
@@ -89,7 +99,7 @@
     post.path.replace("src/posts/", "posts/").replace(".typ", ".html"),
     basic(
       page-title: post.title,
-      (post.html-renderer)[
+      (post.html-renderer.with(page-key: post.title))[
         #title(post.title)
         #post.content
       ],
