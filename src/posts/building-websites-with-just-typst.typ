@@ -1,6 +1,6 @@
 #import "../mod.typ": *
 #show: wstemplate.with(
-  title: "I Replaced Astro with Typst",
+  title: "Building Websites with Just Typst",
   description: "Beyond PDFs",
   created: datetime(year: 2026, month: 07, day: 14),
   tags: (),
