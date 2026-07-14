@@ -22,6 +22,11 @@
     :root {
         scroll-behavior: smooth;
     }
+    @keyframes inline-flash {
+        0% { background-color: transparent; }
+        10% { background-color: rgba(253, 224, 71, 0.8); }
+        100% { background-color: transparent; }
+    }
     ```.text
       + str(_plugin.generate(
         bytes(
@@ -118,22 +123,17 @@
 #document(
   "connections.html",
   basic(page-title: [Connections])[
-    #title[Connections]
     #let connections = toml("connections.toml").connections
-    #(
-      connections
-        .map(ent => html.div(
-          class: "mb-5 [&_a]:block [&_a]:no-underline [&_a]:hover:shadow-[0_0.25rem_0_0_gray] [&_a]:transition-shadow",
-          link(
-            ent.link,
-            {
-              html.span(class: "block", heading(level: 2, ent.title))
-              ent.description
-            },
-          ),
-        ))
-        .join()
-    )
+    #title[Connections]
+    #let links = connections.map(ent => html.a(
+      class: "mb-5 block no-underline hover:shadow-[0_0.25rem_0_0_gray] transition-shadow",
+      href: ent.link,
+      {
+        heading(level: 2, ent.title)
+        ent.description
+      },
+    ))
+    #links.join()
   ],
 ) <connections>
 
@@ -148,7 +148,7 @@
     )
     #html.div(
       class: "[&_a]:flex [&_a]:no-underline [&_a]:hover:shadow-[0_0.25rem_0_0_gray] [&_a]:transition-shadow",
-      (urls.map(it => link(..it)) + posts.map(format-link)).join(parbreak()),
+      (urls.map(it => link(..it)) + posts.map(format-link)).map(par).join(),
     )
   ],
 )
