@@ -7,7 +7,7 @@
     let source-label = label(page-key + "-source-label-" + str(ftn-len))
     let target-label = label(page-key + "-target-label-" + str(ftn-len))
     [
-      #super({
+      #html.sup(class: "target:animate-[inline-flash_1s_ease-out_forwards] rounded-sm", {
         show html.elem.where(tag: "a"): set html.elem(attrs: (
           role: "doc-noteref",
           aria-describedby: "footnote-label",
@@ -31,15 +31,22 @@
     html.aside(aria-labelledby: "footnote-label", {
       divider()
       html.h2(id: "footnote-label", class: "sr-only")[Footnotes]
-      html.ol(for (idx, ftn) in footnotes.enumerate() [
+      html.ol(class: "[&>li]:target:animate-[inline-flash_1s_ease-out_forwards] [&>li]:rounded-sm", for (
+        idx,
+        ftn,
+      ) in footnotes.enumerate() [
         #html.li({
+          {
+            show html.elem.where(tag: "a"): set html.elem(attrs: (
+              aria-label: "Back to reference " + str(idx + 1),
+              role: "doc-backlink",
+              class: "no-underline hover:underline mr-4",
+              style: "user-select: none; margin-right: 0.25rem",
+            ))
+            link(ftn.source)[↑]
+          }
+          [ ]
           ftn.content
-          show html.elem.where(tag: "a"): set html.elem(attrs: (
-            aria-label: "Back to reference " + str(idx + 1),
-            role: "doc-backlink",
-            class: "no-underline hover:underline ml-4 select-none",
-          ))
-          link(ftn.source)[↑]
         }) #ftn.target
       ])
     })
@@ -60,3 +67,35 @@
 ))
 
 #let elink(..args) = link(..args)
+
+#let LaTeX = html.span[
+  L
+  #html.span(
+    class: "font-semibold",
+    style: (
+      font-size: "0.75em",
+      vertical-align: "0.25em",
+      margin-left: "-0.7em",
+      margin-right: "-0.4em",
+      line-height: "1ex",
+      text-transform: "uppercase",
+    )
+      .pairs()
+      .map(((k, v)) => k + ": " + v)
+      .join(";"),
+  )[a]
+  T
+  #html.span(
+    style: (
+      vertical-align: "-0.25em",
+      margin-left: "-0.4em",
+      margin-right: "-0.25em",
+      line-height: "1ex",
+      text-transform: "uppercase",
+    )
+      .pairs()
+      .map(((k, v)) => k + ": " + v)
+      .join(";"),
+  )[e]
+  X
+]
