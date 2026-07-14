@@ -118,7 +118,12 @@ simplified it to a minimum, reducing the PDF generation function as I don't real
 
 I have not tried adding images or formulas yet,#footnote[
   Here is a quick and simple test using `html.frame`:
-  #html.frame($ integral x^3 dot ln x dif x $)
+  #let eq = $ integral x^3 dot ln x dif x $
+
+  #html.frame(eq)
+
+  And without frame: #eq
+
   Nevertheless, I still need to work on it to make it display properly under dark mode.
 ] and it would be hard to add them using Typst's current html export features. Yet, as a normal user of Typst, I would
 definitely keep in track of its changes. While our honourable crew work on Typst, especially the HTML export feature, I
