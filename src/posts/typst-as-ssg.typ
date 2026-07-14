@@ -1,18 +1,39 @@
 #import "../mod.typ": *
 #show: wstemplate.with(
-  title: "Using Typst as an SSG",
+  title: "I Replaced Astro with Typst",
   description: "Beyond PDFs",
-  created: datetime(year: 2026, month: 07, day: 12),
+  created: datetime(year: 2026, month: 07, day: 14),
   tags: (),
   author: jeremy-gao,
 )
 
-This site you're seeing is built with Typst. Typst is the only dependency.
+#html.div(
+  class: `
+  w-full bg-red-500 text-white h-10 font-bold
+  flex items-center justify-center uppercase`.text,
+)[Work in progress]
+
+This site you're seeing is built with Typst. Typst is the only build tool required to build the site.
+
+#let shebang-footnote = footnote[
+  The shebang: #raw(block: true, lang: "console", read("/dist.typ").split("\n").first()). In practice, it is probably
+  better to setup a `Justfile` or `Makefile` to manage the commands. In my case, I only have two commands to execute
+  during development: build, which builds the site, and serve, which serves the site. I wanted to avoid pulling in an
+  extra dependency (even including `make`! Which is installed by default on many devices), so in this case I just have
+  `dist.typ` with a shebang, and an extra `serve` file which looks like this: #raw(
+    block: true,
+    lang: "commands-builtin-shell-bash",
+    read("/serve"),
+  )
+]
+
+The build command is quite simple: the site has a `dist.typ` file with a shebang #shebang-footnote. I set the execution
+bit for the file, then execute the file in my command line. I think this is cool.
 
 Before you read, please keep in mind that I don't have a lot of web development experience. I just graduated from high
 school and sometimes I am extremely opinionated on certain technologies.
 
-= How to Build a Site Today
+= Building a Simple Site Today
 
 Building a site today _correctly_ is... rather complicated. Many sites use at least one web framework or template
 engine. I've used Jinja2, WebC, and Nunjucks, as well as Eleventy and Astro.
@@ -48,8 +69,6 @@ comparison and type casting. All of which have repelled me from writing websites
 
 = Typst
 
-#html.div(
-  class: `
-  w-full bg-red-500 text-white h-10 font-bold
-  flex items-center justify-center uppercase`.text,
-)[Work in progress]
+Typst is mostly known as the "modern #LaTeX alternative", which is true. But it can do more than just producing PDFs.
+
+= Postprocessing HTML
