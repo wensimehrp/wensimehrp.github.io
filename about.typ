@@ -15,7 +15,8 @@ Typst. I like Typst for its elegance and speed. I like Rust for its safety guara
 I prefer writing sites by hand. Some specific details are tedious to implement by hand, but the process of writing and
 seeing everything composing together is enjoyable, and rewarding.
 
-My English is quite bad.
+My English is quite bad. I know Chinese and I speak Mandarin, plus a few swear words in Cantonese. I want to learn more
+languages.
 
 = Contacting
 

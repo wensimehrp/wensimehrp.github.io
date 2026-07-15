@@ -17,7 +17,7 @@
     frameborder: "no",
     framespacing: "0",
     allowfullscreen: "true",
-    class: "w-full aspect-video",
+    class: "w-full aspect-video bg-black",
     loading: "lazy",
   ))
 } else [
