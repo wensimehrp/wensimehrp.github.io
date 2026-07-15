@@ -1,6 +1,7 @@
 #let jeremy-gao = "Jeremy Gao"
 
 #let html-renderer(c, page-key: none, ..args) = {
+  let page-key = if page-key == none { args.title } else { page-key }
   let footnote-tracker = state("__footnote-tracker-" + page-key, ())
   show footnote: it => context {
     let ftn-len = footnote-tracker.get().len()
@@ -24,11 +25,24 @@
     )
     footnote-tracker.update(arr => arr + (new-label,))
   }
+  // phew; the main part
+  html.header(class: "mb-5", {
+    title(args.title)
+    html.div(class: "flex gap-2", {
+      html.address(class: "author", args.author)
+      html.span(class: "select-none")[·]
+      html.time(
+        datetime: args.created,
+        args.created.display("[month repr:short]. [day], [year]"),
+      )
+    })
+  })
   c
+  // now back to footnotes
   context {
     let footnotes = footnote-tracker.final()
     if footnotes.len() == 0 { return }
-    html.aside(aria-labelledby: "footnote-label", {
+    html.section(aria-labelledby: "footnote-label", {
       divider()
       html.h2(id: "footnote-label", class: "sr-only")[Footnotes]
       html.ol(class: "[&>li]:target:animate-[inline-flash_1s_ease-out_forwards] [&>li]:rounded-sm", for (
@@ -61,7 +75,7 @@
   pdf-renderer: pdf-renderer,
   ..args,
 ) = metadata((
-  html-renderer: html-renderer,
+  html-renderer: html-renderer.with(..args),
   ..args.named(),
   content: c,
 ))

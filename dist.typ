@@ -107,10 +107,7 @@
     post.path.replace("src/posts/", "posts/").replace(".typ", ".html"),
     basic(
       page-title: post.title,
-      (post.html-renderer.with(page-key: post.title))[
-        #title(post.title)
-        #post.content
-      ],
+      (post.html-renderer)(post.content),
     ),
   ) #post.label
 ]
@@ -122,20 +119,26 @@
 
 #document(
   "connections.html",
-  basic(page-title: [Connections])[
-    #let connections = toml("connections.toml").connections
-    #title[Connections]
-    #let links = connections.map(ent => html.a(
-      class: "mb-5 block no-underline hover:shadow-[0_0.25rem_0_0_gray] transition-shadow",
-      href: ent.link,
-      {
-        heading(level: 2, ent.title)
-        ent.description
-      },
-    ))
-    #links.join()
-  ],
+  basic(page-title: [Connections], {
+    let connections = toml("connections.toml").connections
+    title[Connections]
+    for ent in connections {
+      html.div(html.a(
+        class: "mb-5 block no-underline hover:shadow-[0_0.25rem_0_0_gray] transition-shadow",
+        href: ent.link,
+        {
+          heading(level: 2, ent.title)
+          ent.description
+        },
+      ))
+    }
+  }),
 ) <connections>
+
+#document("about.html", basic(
+  page-title: [Connections],
+  include "about.typ",
+)) <about>
 
 #document(
   "index.html",
@@ -145,10 +148,25 @@
       ("https://wensimehrp.github.io/tfvindex", [TFVIndex Icon Site]),
       ("https://paiagram.com", [Paiagram]),
       (<connections>, [Connections]),
+      (<about>, [About]),
     )
     #html.div(
       class: "[&_a]:flex [&_a]:no-underline [&_a]:hover:shadow-[0_0.25rem_0_0_gray] [&_a]:transition-shadow",
-      (urls.map(it => link(..it)) + posts.map(format-link)).map(par).join(),
+      {
+        for url in urls {
+          par(link(..url))
+        }
+        divider()
+        [= Posts]
+        for (idx, post) in posts.enumerate() {
+          // this wraps to the last post for the very first post
+          let prev-post = posts.at(idx - 1)
+          if prev-post.created.year() != post.created.year() [
+            == #post.created.year()
+          ]
+          par(format-link(post))
+        }
+      },
     )
   ],
 )
