@@ -149,6 +149,7 @@
     #let urls = (
       ("https://wensimehrp.github.io/tfvindex", [TFVIndex Icon Site]),
       ("https://paiagram.com", [Paiagram]),
+      ("https://wensimehrp.github.io/haita/", [Haita Documentation Framework]),
       (<connections>, [Connections]),
       (<about>, [About]),
     )
