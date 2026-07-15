@@ -101,7 +101,6 @@
     .rev()
 )
 
-
 #for post in posts [
   #document(
     post.path.replace("src/posts/", "posts/").replace(".typ", ".html"),
@@ -140,6 +139,9 @@
   include "about.typ",
 )) <about>
 
+// for Atom feed
+#let page-abs-links = state("__page-abs-links", (:))
+
 #document(
   "index.html",
   basic(page-title: [The Gao Log])[
@@ -150,6 +152,11 @@
       (<connections>, [Connections]),
       (<about>, [About]),
     )
+    // update page-abs-links for generating RSS
+    #for post in posts {
+      show html.elem.where(tag: "a"): a => page-abs-links.update(links => links + ((a.attrs.href): post))
+      link(post.label)[]
+    }
     #html.div(
       class: "[&_a]:flex [&_a]:no-underline [&_a]:hover:shadow-[0_0.25rem_0_0_gray] [&_a]:transition-shadow",
       {
@@ -170,3 +177,9 @@
     )
   ],
 )
+
+// rss feed generation
+#context asset("feed.xml", {
+  "Massive constructon site here.\n"
+  page-abs-links.final().keys().join("\n")
+})

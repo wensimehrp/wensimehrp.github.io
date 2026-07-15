@@ -13,7 +13,7 @@ you're viewing right now is built without a single line of those modern web yadd
 Typst. I like Typst for its elegance and speed. I like Rust for its safety guarantees.
 
 I prefer writing sites by hand. Some specific details are tedious to implement by hand, but the process of writing and
-seeing everything composing together are enjoying, and rewarding.
+seeing everything composing together is enjoyable, and rewarding.
 
 My English is quite bad.
 
