@@ -72,9 +72,9 @@
       (3, [your steps]),
     ),
     ja-Latn: (
-      (1, [Ashigā]),
-      (2, [ashigā]),
-      (3, [ashigā]),
+      (1, [Ashi gā]),
+      (2, [ashi gā]),
+      (3, [ashi gā]),
     ),
   ),
   (
