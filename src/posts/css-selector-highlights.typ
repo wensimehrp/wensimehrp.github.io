@@ -6,13 +6,6 @@
   author: jeremy-gao,
 )
 
-#let ref-link = "https://blog.xinshijiededa.men/css-hover-interlinear/"
-
-I used CSS selectors in my #link("https://wensimehrp.github.io/tfvindex")[TFVIndex] site for highlighting companies
-operating in a prefecture and companies' operation range. #link(ref-link)[This earlier blog post from OverflowCat] shows
-that selectors can be used to implement multilingual translation highlighting. Here is my implementation using a
-different piece of text and build method:
-
 #let dict = (
   (
     ja: (
@@ -157,6 +150,13 @@ text-decoration-thickness: 5px;
 ```
 
 #eval(typst-src.text, mode: "markup", scope: (dict: dict))
+
+#let ref-link = "https://blog.xinshijiededa.men/css-hover-interlinear/"
+
+I used CSS selectors in my #link("https://wensimehrp.github.io/tfvindex")[TFVIndex] site for highlighting companies
+operating in a prefecture and companies' operation range. #link(ref-link)[This earlier blog post from OverflowCat] shows
+that selectors can be used to implement multilingual translation highlighting. The song above is my implementation using
+a different piece of text and build method.
 
 #divider()
 
