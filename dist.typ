@@ -32,6 +32,7 @@
     ```css
     :root {
         scroll-behavior: smooth;
+        --en-prose-pre-code: #000 !important;
     }
     @keyframes inline-flash {
         0% { background-color: transparent; }
@@ -77,12 +78,22 @@
           "prose",
           "prose-headings:font-[Libertinus_Serif_Display]",
           "dark:prose-invert",
+          "prose-pre:border",
+          "prose-pre:bg-transparent",
+          "prose-pre:text-slate-800",
+          // they only work with the exclamation point for some reason
+          "dark:prose-pre:!bg-black",
+          "dark:prose-pre:!border-transparent",
+          "dark:prose-pre:!text-white",
+          "prose-pre:rounded-none",
+          "prose-a:decoration-1",
+          "prose-a:hover:decoration-4",
+          "prose-a:transition-all",
+          "prose-a:underline-offset-4",
           "max-w-3xl",
           "mx-auto",
           "px-5",
           "my-20",
-          "prose-pre:bg-zinc-900",
-          "prose-pre:rounded-none",
         ),
         c,
       )
@@ -164,6 +175,7 @@
       ("https://wensimehrp.github.io/haita/", [Haita Documentation Framework]),
       (<connections>, [Connections]),
       (<about>, [About]),
+      (<atom>, [Subscribe to my blog (atom.xml)]),
     )
     // update page-abs-links for generating RSS
     #for post in posts {
@@ -191,8 +203,4 @@
   ],
 )
 
-// rss feed generation
-#context asset("feed.xml", {
-  "Massive constructon site here.\n"
-  page-abs-links.final().keys().join("\n")
-})
+#include "atom.typ"

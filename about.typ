@@ -2,7 +2,7 @@
 
 // consider updating this automatically? Say datetime.today() minus my birthday
 
-I am Jeremy, a 17-year-old from a country that starts with C in English.
+I am Jeremy, a 17-year-old from a country that starts with "C" and ends with an "A" in English.
 
 Wendy's is certainly better than McDonalds or KFC.
 
@@ -17,6 +17,12 @@ seeing everything composing together is enjoyable, and rewarding.
 
 My English is quite bad. I know Chinese and I speak Mandarin, plus a few swear words in Cantonese. I want to learn more
 languages.
+
+= Projects
+
+- / #link("https://paiagram.com")[Paiagram]: Web/desktop app for editing marey charts and animate timetables.
+- / #link("https://wensimehrp.github.io/tfvindex")[TFVIndex]: Train icon site.
+- / #link("https://wensimehrp.github.io/haita")[Haita]: Pure Typst documentation framework.
 
 = Contacting
 
