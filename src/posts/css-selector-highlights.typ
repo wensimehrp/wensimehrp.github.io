@@ -30,7 +30,7 @@ different piece of text and build method:
       (2, [Honey]),
       (3, [Honey]),
     ),
-    romaji: (
+    ja-Latn: (
       (1, [Hachimī]),
       (2, [hachimī]),
       (3, [hachimī]),
@@ -55,7 +55,7 @@ different piece of text and build method:
       (2, [drink]),
       (1, [the honey drink]),
     ),
-    romaji: (
+    ja-Latn: (
       (1, [Hachimī]),
       (4, [o]),
       (2, [nameru]),
@@ -78,7 +78,7 @@ different piece of text and build method:
       (2, [your steps]),
       (3, [your steps]),
     ),
-    romaji: (
+    ja-Latn: (
       (1, [Ashigā]),
       (2, [ashigā]),
       (3, [ashigā]),
@@ -97,7 +97,7 @@ different piece of text and build method:
       (2, [Will]),
       (1, [go faster]),
     ),
-    romaji: (
+    ja-Latn: (
       (1, [Hayakū]),
       (2, [naru]),
     ),
