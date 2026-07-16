@@ -1,6 +1,17 @@
 #!/usr/bin/env -S typst compile --features bundle,html --format bundle
 #import "@preview/typhoon:0.1.2": _plugin
 
+#let realize(label, fn) = {
+  let c = state("__realize-label+a-bunch-of-entropy", none)
+  {
+    show html.elem.where(tag: "a"): elem => c.update(href => elem.attrs.href)
+    link(label)[]
+  }
+  context {
+    fn(c.get())
+  }
+}
+
 #let tailwind-classes = state("tailwind-classes", ())
 #show html.elem: elem => {
   let classes = elem.fields().attrs.at("class", default: ())
@@ -15,8 +26,8 @@
   elem
 }
 
-#context {
-  asset(
+#context [
+  #asset(
     "styles.css",
     ```css
     :root {
@@ -40,8 +51,8 @@
           ),
         )),
       )),
-  )
-}
+  ) <styles>
+]
 
 #let basic(c, page-title: none) = {
   import html: *
@@ -49,7 +60,7 @@
     head({
       meta(charset: "utf-8")
       meta(name: "viewport", content: "width=device-width, initial-scale=1")
-      link(rel: "stylesheet", href: "/styles.css")
+      realize(<styles>, href => link(rel: "stylesheet", href: href))
       style(
         "@import url('https://fonts.googleapis.com/css2?family=Libertinus+Serif+Display&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');",
       )
