@@ -129,7 +129,7 @@ text-decoration-thickness: 5px;
 #html.div(class: "mx-auto w-fit my-15",
   html.hgroup(
     html.h2(class: "mx-auto w-fit mb-1")[The Honey Drink Song]
-    + html.p(class: "mx-auto w-fit font-sans")[はちみーのうた]
+    + html.p(class: "mx-auto w-fit font-sans", lang: "ja")[はちみーのうた]
   )
   + for line in dict {
   html.div(class: "line my-8", for (lang, words) in line {
