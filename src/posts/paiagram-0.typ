@@ -8,7 +8,7 @@
 )
 
 _This post is part of the series of dev diaries about Paiagram, an application for creating and visualizing transport
-timetables. Visit #elink("https://wensimehrp.github.io/Paiagram") to try out the app!_
+timetables. Visit #elink("https://paiagram.com") to try out the app!_
 
 = A Personal Story
 

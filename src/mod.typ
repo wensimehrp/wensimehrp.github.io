@@ -28,16 +28,32 @@
   // phew; the main part
   html.header(class: "mb-5", {
     title(args.title)
+    html.style(
+      ```css
+      time::before {
+        content: "»";
+        margin-right: 0.5rem;
+      }
+      ```.text,
+    )
     html.div(class: "flex gap-2", {
       html.address(class: "author", args.author)
-      html.span(class: "select-none")[·]
       html.time(
         datetime: args.created,
         args.created.display("[month repr:short]. [day], [year]"),
       )
     })
   })
+  html.style(
+    ```css
+      .end::before {
+        content: "✿";
+        margin-left: 0.5rem;
+      }
+    ```.text,
+  )
   c
+  html.span(class: "end")
   // now back to footnotes
   context {
     let footnotes = footnote-tracker.final()
