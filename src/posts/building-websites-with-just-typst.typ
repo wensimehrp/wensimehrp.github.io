@@ -2,7 +2,7 @@
 #show: wstemplate.with(
   title: "Building Websites with Just Typst",
   description: "Beyond PDFs",
-  created: datetime(year: 2026, month: 07, day: 14),
+  created: datetime(year: 2026, month: 07, day: 30),
   tags: (),
   author: jeremy-gao,
 )

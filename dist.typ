@@ -86,6 +86,7 @@
     "src/posts/2025-summary.typ",
     "src/posts/typst-animations.typ",
     "src/posts/building-websites-with-just-typst.typ",
+    "src/posts/css-selector-highlights.typ",
     "src/posts/bad-typple.typ",
     "src/posts/typtex.typ",
   )
