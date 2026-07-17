@@ -47,8 +47,7 @@
   html.style(
     ```css
       .end::before {
-        content: "✿";
-        margin-left: 0.5rem;
+        content: " ✿";
       }
     ```.text,
   )
