@@ -24,6 +24,28 @@ languages.
 - / #link("https://wensimehrp.github.io/tfvindex")[TFVIndex]: Train icon site.
 - / #link("https://wensimehrp.github.io/haita")[Haita]: Pure Typst documentation framework.
 
+= Equipment
+
+#let fu(qty, unit) = qty + sym.space.nobreak.narrow + unit
+
+- Laptop 1 (Aug. 2023--)
+  - Lenovo Legion Y9000P IRX8
+  - Intel i9-13900HX
+  - NVIDIA RTX 4060 Mobile + Integrated Graphics
+  - NixOS
+  - #fu[64.0][GiB] RAM
+  - #fu[3.0][TB] Storage
+- Laptop 2 (Jan. 2026--)
+  - Lenovo YOGA 14 ILL10X
+  - Intel Ultra 7 258V × 8
+  - Intel Graphics (LNL)
+  - NixOS
+  - #fu[32.0][GiB] RAM
+  - #fu[1.0][TB] Storage
+- Canon EOS RP
+- Nice US\$25 mechanical keyboard I got from Taobao
+- US\$8 GameSir game controller
+
 = Contacting
 
 Send me an email: #link("mailto:wensimehrp@gmail.com").
