@@ -25,7 +25,7 @@ This site you're seeing is built with Typst. Typst is the only build tool requir
 The build command is quite simple: the site has a `dist.typ` file with a shebang: #raw(
   block: true,
   lang: "sh",
-  read("/dist.typ").split("\n").slice(9).join("\n"),
+  read("/dist.typ").split("\n").slice(0, count: 9).join("\n"),
 ) #shebang-footnote. I set the execution bit for the file, then execute the file in my command line, which will output
 the site to `./dist`. I think this is cool.
 
