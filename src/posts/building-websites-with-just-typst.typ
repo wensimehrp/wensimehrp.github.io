@@ -19,17 +19,13 @@ This site you're seeing is built with Typst. Typst is the only build tool requir
   In practice, it is probably better to setup a `Justfile` or `Makefile` to manage the commands. In my case, I only have
   two tasks to execute during development: build, which builds the site, and serve, which runs a local development
   server provided by `typst`. I wanted to avoid pulling in an extra dependency (even including `make`! Which is
-  installed by default on many devices), so in this case I just have `dist.typ` with a shebang, and an extra `serve`
-  file which looks like this:
-  #raw(
-    block: true,
-    lang: "commands-builtin-shell-bash",
-    read("/serve"),
-  )
+  installed by default on many devices), so in this case I just have a polyglot `dist.typ` with a bash header.
 ]
 
 The build command is quite simple: the site has a `dist.typ` file with a shebang: #raw(
-  read("/dist.typ").split("\n").first(),
+  block: true,
+  lang: "sh",
+  read("/dist.typ").split("\n").slice(9).join("\n"),
 ) #shebang-footnote. I set the execution bit for the file, then execute the file in my command line, which will output
 the site to `./dist`. I think this is cool.
 
