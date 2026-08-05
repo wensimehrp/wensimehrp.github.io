@@ -19,11 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@v20
-      - uses: DeterminateSystems/magic-nix-cache-action@v13
+      - uses: typst-community/setup-typst@v5
+        with:
+          typst-version: ^0.15.1
 
       - name: Build site
-        run: nix develop .#default --command time ./dist.typ
+        run: time ./dist.typ compile
 
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
