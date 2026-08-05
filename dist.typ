@@ -1,4 +1,12 @@
-#!/usr/bin/env -S typst compile --features bundle,html --format bundle
+#!/usr/bin/env bash
+#let _ = ```sh
+case "$1" in
+  compile) typst compile --features bundle,html --format bundle $0 ;;
+  watch)   typst watch   --features bundle,html --format bundle --pretty $0 ;;
+  *)       echo "Unknown option: $1. Enter 'compile' or 'watch'"; exit 1 ;;
+esac
+exit 0
+```
 #import "@preview/typhoon:0.1.2": _plugin
 
 #let realize(label, fn) = {
