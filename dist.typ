@@ -37,7 +37,7 @@ exit 0
       ))
     },
   )
-}
+]
 
 #let basic(c, page-title: none) = {
   import html as h

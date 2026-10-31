@@ -23,11 +23,7 @@ site.
   my case, I only have two commands to execute during development: build, which builds the site, and
   serve, which serves the site. I wanted to avoid pulling in an extra dependency (even including
   `make`! Which is installed by default on many devices), so in this case I just have `dist.typ`
-  with a shebang, and an extra `serve` file which looks like this: #raw(
-    block: true,
-    lang: "commands-builtin-shell-bash",
-    read("/serve"),
-  )
+  with a shebang.
 ]
 
 The build command is quite simple: the site has a `dist.typ` file with a shebang #shebang-footnote.
