@@ -5,7 +5,7 @@ My personal blog site.
 This site uses Typst to build everything. The only dependencies to build the
 site are `Typst >= 0.15` and some Typst packages.
 
-Run `./dist.typ` to build the site. Run `./serve` to serve the site.
+Run `./dist.typ watch` to serve the site. Run `./dist.typ compile` to build the site.
 
 ## Licensing
 
