@@ -64,7 +64,8 @@ drawbacks to commands in general:
 - It is easy to lose cached states, and the countercommand must store cached data accordingly.
 - Some command variant might be huge. Though this could be solved by wrapping the variant in a Box.
 - Changing the internal representation of one command meaning rewriting the mapping logic and
-  changing another command's internals.
+  changing another command's internals. A lot of the logic is already available somewhere else in
+  the codebase, and the command system is just duplicating them.
 
 :-(. I did something else that made it even worse.
 
