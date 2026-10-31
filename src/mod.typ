@@ -60,24 +60,27 @@
     html.section(aria-labelledby: "footnote-label", {
       divider()
       html.h2(id: "footnote-label", class: "sr-only")[Footnotes]
-      html.ol(class: "[&>li]:target:animate-[inline-flash_1s_ease-out_forwards] [&>li]:rounded-sm", for (
-        idx,
-        ftn,
-      ) in footnotes.enumerate() [
-        #html.li({
-          {
-            show html.elem.where(tag: "a"): set html.elem(attrs: (
-              aria-label: "Back to reference " + str(idx + 1),
-              role: "doc-backlink",
-              class: "no-underline hover:underline mr-4",
-              style: "user-select: none; margin-right: 0.25rem",
-            ))
-            link(ftn.source)[↑]
-          }
-          [ ]
-          ftn.content
-        }) #ftn.target
-      ])
+      html.ol(
+        class: "[&>li]:target:animate-[inline-flash_1s_ease-out_forwards] [&>li]:rounded-sm",
+        for (
+          idx,
+          ftn,
+        ) in footnotes.enumerate() [
+          #html.li({
+            {
+              show html.elem.where(tag: "a"): set html.elem(attrs: (
+                aria-label: "Back to reference " + str(idx + 1),
+                role: "doc-backlink",
+                class: "no-underline hover:underline mr-4",
+                style: "user-select: none; margin-right: 0.25rem",
+              ))
+              link(ftn.source)[↑]
+            }
+            [ ]
+            ftn.content
+          }) #ftn.target
+        ],
+      )
     })
   }
 }
@@ -97,7 +100,7 @@
 
 #let elink(..args) = link(..args)
 
-#let LaTeX = html.span[
+#let LaTeX = std.html.span[
   L
   #html.span(
     class: "font-semibold",
