@@ -7,81 +7,55 @@ case "$1" in
 esac
 exit 0
 ```
-#import "@preview/typhoon:0.1.2": _plugin
-
-#let realize(label, fn) = {
-  let c = state("__realize-label+a-bunch-of-entropy", none)
-  {
-    show html.elem.where(tag: "a"): elem => c.update(href => elem.attrs.href)
-    link(label)[]
-  }
-  context {
-    fn(c.get())
-  }
-}
-
-#let tailwind-classes = state("tailwind-classes", ())
-#show html.elem: elem => {
-  let classes = elem.fields().attrs.at("class", default: ())
-  let classes = if type(classes) == str {
-    classes.split(" ")
-  } else {
-    classes
-  }
-  tailwind-classes.update(it => {
-    (it + classes).sorted().dedup()
-  })
-  elem
-}
+#import "@preview/typhoon:0.2.0"
 
 #context [
   #asset(
     "styles.css",
-    ```css
-    :root {
-        scroll-behavior: smooth;
-        --en-prose-pre-code: #000 !important;
-    }
-    @keyframes inline-flash {
-        0% { background-color: transparent; }
-        10% { background-color: rgba(253, 224, 71, 0.8); }
-        100% { background-color: transparent; }
-    }
-    ```.text
-      + str(_plugin.generate(
-        bytes(
-          tailwind-classes.final().join(" ") + "",
-        ),
-        cbor.encode((
-          preflight: (
-            full: (
-              font_family_sans: "Nunito",
-            ),
+    {
+      ```css
+      @import url('https://fonts.googleapis.com/css2?family=Libertinus+Serif+Display&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+
+      :root {
+          scroll-behavior: smooth;
+      }
+
+      @keyframes inline-flash {
+          0% { background-color: transparent; }
+          10% { background-color: rgba(253, 224, 71, 0.8); }
+          100% { background-color: transparent; }
+      }
+
+      ```.text
+
+      typhoon.tailwind-css(config: (
+        preflight: (
+          full: (
+            font_family_sans: "Nunito",
           ),
-        )),
-      )),
-  ) <styles>
-]
+        ),
+      ))
+    },
+  )
+}
 
 #let basic(c, page-title: none) = {
-  import html: *
-  html(lang: "en", {
-    head({
-      meta(charset: "utf-8")
-      meta(name: "viewport", content: "width=device-width, initial-scale=1")
-      realize(<styles>, href => link(rel: "stylesheet", href: href))
-      style(
-        "@import url('https://fonts.googleapis.com/css2?family=Libertinus+Serif+Display&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');",
-      )
-      elem("script", attrs: (
+  import html as h
+  show h.elem: typhoon.update-elem
+  h.html(lang: "en", {
+    h.head({
+      h.meta(charset: "utf-8")
+      h.meta(name: "viewport", content: "width=device-width, initial-scale=1")
+      h.link(rel: "stylesheet", href: "/styles.css")
+      h.elem("script", attrs: (
         defer: "",
         src: "https://umami-theta-pink.vercel.app/script.js",
         data-website-id: "bbe83d2b-314a-4023-87e7-765f49b46a0c",
       ))
-      title(page-title)
+      h.title(page-title)
     })
-    body(class: "bg-stone-100 dark:bg-zinc-800", {
-      article(
+    h.body(class: "bg-stone-100 dark:bg-zinc-800", {
+      h.article(
         class: (
           "prose",
           "prose-headings:font-[Libertinus_Serif_Display]",
@@ -113,6 +87,7 @@ exit 0
   (
     "src/posts/typst-transition.typ",
     "src/posts/paiagram-0.typ",
+    "src/posts/paiagram-1.typ",
     "src/posts/2025-summary.typ",
     "src/posts/typst-animations.typ",
     "src/posts/building-websites-with-just-typst.typ",
@@ -187,7 +162,9 @@ exit 0
     )
     // update page-abs-links for generating RSS
     #for post in posts {
-      show html.elem.where(tag: "a"): a => page-abs-links.update(links => links + ((a.attrs.href): post))
+      show html.elem.where(tag: "a"): a => page-abs-links.update(links => (
+        links + ((a.attrs.href): post)
+      ))
       link(post.label)[]
     }
     #html.div(
