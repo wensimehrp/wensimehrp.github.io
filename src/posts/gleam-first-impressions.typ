@@ -17,7 +17,7 @@ about functional programming#footnote[Although the professor used Python with a 
   argue that Python is one of the worst options for an FP course because 1. it has the weird LEGB
   thingy for variable scopes and 2. everything in Python is shareable and mutable. It's not meant to
   be FP!
-], Although I knew much of the content the forehand by writing other projects in Rust and Typst. I
+], although I knew much of the content the forehand by writing other projects in Rust and Typst. I
 decided to learn Gleam to learn more about functional programming beyond the course's contents.
 
 = QOI Decoder in Gleam
