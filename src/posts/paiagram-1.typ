@@ -2,8 +2,8 @@
 #show: wstemplate.with(
   title: "Paiagram 1: World Design",
   description: "Immutable data structures.",
-  created: datetime(year: 2026, month: 10, day: 31),
-  tags: ("egui", "rust", "paiagram"),
+  created: datetime(year: 2026, month: 11, day: 1),
+  tags: ("rust", "paiagram"),
   author: jeremy-gao,
 )
 
@@ -23,6 +23,27 @@ following:
 These are the reasons why I used immutable data structures. Before discussing immutable data
 structures, I want to first talk about the command--source pattern, and why I eventually abandoned
 it.
+
+= Overcomplicating the World
+
+I set "performance" as one of the main goals for the world model. At a first glance, there seem to
+be many ways to improve the performance, for example structure of arrays. It doesn't waste padding,
+is fast to access, and keeps data in hot cache lines. But SoA isn't without its costs.
+
+Structure of arrays (and on an extent, the Entity--Component--System paradigm), is best when the app
+frequently accesses homogenous and processes them in batches. This is true for many types of games,
+since there might be similar components shared accross different entities. However, this is not true
+for Paiagram. Each entity in Paiagram carries its unique set of data, and the components of each
+entity are barely shareable. In the previous blog post, I said that I will use Bevy because it is
+"the magic trick that makes everything run faster." I removed Bevy six months later because of these
+reasons:
+
+- Bevy's entities are not ordered in memory.
+- Each query to the ECS require a lot of `.unwrap()`s to get the underlying data type, or at least
+  early returns. _Their type also can't be guaranteed by the Type system since each piece of data
+  (trip, station, route, notes, etc.) share the same Key type (Entity)_.
+- Undo/Redo becomes tedious as it is impossible to insert an old Entity into the World.
+- It is a game engine. Not a library.
 
 = Command and Conquer
 
@@ -69,10 +90,6 @@ drawbacks to commands in general:
 
 :-(. I did something else that made it even worse.
 
-= Overcomplicating the World
+= One Year of Paiagram
 
-After abandoning Bevy...
-
-= The Red Alert
-
-Paiagram has a few core components.
+I created the first commit on Nov. 4, 2025 PT.

@@ -9,6 +9,9 @@ exit 0
 ```
 #import "@preview/typhoon:0.2.0"
 
+// highlighting for gleam code
+#show raw.where(lang: "gleam"): set raw(syntaxes: "Gleam.sublime-syntax")
+
 #context [
   #asset(
     "styles.css",
@@ -58,6 +61,7 @@ exit 0
       h.article(
         class: (
           "prose",
+          "prose-stone",
           "prose-headings:font-[Libertinus_Serif_Display]",
           "dark:prose-invert",
           "prose-pre:border",
@@ -94,6 +98,7 @@ exit 0
     "src/posts/css-selector-highlights.typ",
     "src/posts/bad-typple.typ",
     "src/posts/typtex.typ",
+    "src/posts/gleam-first-impressions.typ",
   )
     .map(path => (include path, path))
     .map(((content, path)) => (
