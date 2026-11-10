@@ -17,8 +17,8 @@ following:
 - Lightweight, even when I need to use it across multiple threads
 - Can be (de)serialized via serde
 - Supports undo and redo
-- Supports extensions. Ideally we want the data to be shared with another thread
-- Multiuser collaboration, in the future.
+- Supports extensions.
+- Multiuser collaboration.
 
 These are the reasons why I used immutable data structures. Before discussing immutable data
 structures, I want to first talk about the command--source pattern, and why I eventually abandoned
@@ -43,7 +43,7 @@ reasons:
   early returns. _Their type also can't be guaranteed by the Type system since each piece of data
   (trip, station, route, notes, etc.) share the same Key type (Entity)_.
 - Undo/Redo becomes tedious as it is impossible to insert an old Entity into the World.
-- It is a game engine. Not a library.
+- It is a game engine. not a library. It introduces hidden bloat.
 
 = Command and Conquer
 
@@ -59,9 +59,9 @@ their approach was stupid, I started with the following instead:
 
 ```rust
 enum Command {
-    AddTrain(...),
-    RemoveTrain(...)
-    ...
+    AddTrain(..),
+    RemoveTrain(..),
+    ShiftTripTime(..),
 }
 
 impl Command {
@@ -69,18 +69,19 @@ impl Command {
         // in this case E is some generic error type
         use Command::*;
         match self {
-            AddTrain(...) => Ok(RemoveTrain(...)),
-            RemoveTrain(...) => Ok(AddTrain(...)),
+            AddTrain(..) => Ok(RemoveTrain(..)),
+            RemoveTrain(..) => Ok(AddTrain(..)),
+            ShiftTripTime(..) => Ok(ShiftTripTime(..)),
         }
     }
 }
 ```
 
 Each command produces a countercommand that does the exact opposite when being committed, and that
-countercommand would be pushed into a undo stack. The command pattern works particularly well, and
-doesn't require an extra `undo` method. But applications grow and get complicated every, and
-manually wiring each command to a counter command introduces _a lot_ of bugs. There are more
-drawbacks to commands in general:
+countercommand would be pushed into an undo stack. The command pattern works particularly well, and
+doesn't require an extra `undo` method. But applications grow and get complicated every; manually
+wiring each command to a counter command introduces _a lot_ of bugs. There are more drawbacks to
+commands in general:
 
 - It is easy to lose cached states, and the countercommand must store cached data accordingly.
 - Some command variant might be huge. Though this could be solved by wrapping the variant in a Box.
@@ -88,7 +89,47 @@ drawbacks to commands in general:
   changing another command's internals. A lot of the logic is already available somewhere else in
   the codebase, and the command system is just duplicating them.
 
-:-(. I did something else that made it even worse.
+Undos aren't the only reason why I eventually choese imbl. I wrote an overcomplicated implementation
+for my world model before that.
+
+= SoAs Are Not That Convenient
+
+SoA stands for structure of arrays. Conversely, there's also an array of structures, which is the
+most common way to store some data. The idea of array of structures is to store the data inside a
+big vector, and each datum#footnote[Do we even use this word] would be a structure containing some
+fields:
+
+```rust
+struct MyDatum {
+    foo: f64,           // 8 bytes
+    bar: bool,          // 1 bytes
+    baz: Vec<BlaBlaBla> // Vec itself is 24 bytes on a 64-bit machine
+}
+
+/// The storage for all MyDatum
+struct Data(Vec<MyDatum>);
+```
+
+Because of alignments and other issues, the overall size of MyDatum would bigger than 8 bytes + 1
+byte + 24 bytes = 33 bytes. On my machine, Rust would insert 7 extra bytes and make it 40 bytes in
+total. The reason is #link("https://en.wikipedia.org/wiki/Data_structure_alignment")[explained
+  here].
+
+SoA reverses this design. Instead of storing _structures_ in _arrays_, SoA instead stores _arrays_
+in _structures_:
+
+```rust
+struct Data {
+    foo: Vec<f64>,
+    bar: Vec<bool>,
+    baz: Vec<BlaBlaBla>,
+}
+```
+
+Each piece of data is stored directly against each other in RAM, which leaves no space for padding.
+In addition, this pattern is also particularly well for procedures that operate only on one field.
+
+And I am going to talk about the pitfalls.
 
 = One Year of Paiagram
 
