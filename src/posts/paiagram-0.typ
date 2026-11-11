@@ -107,7 +107,7 @@ simpler than that? It does come with some caveats though, like not being able to
 detect a font when rendering CJK text and creating significant lag when the interface is extremely
 complicated, but most of those problems have workarounds, and such problems are not common anyways.
 
-= Bevy and Bevy ECS
+= Bevy and Bevy ECS <paiagram-0-with-bevy>
 
 We're finally onto ECS, the magic trick that makes everything run faster. I used #elink(
   "https://github.com/bevyengine/bevy",
