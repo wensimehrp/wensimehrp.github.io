@@ -2,7 +2,7 @@
 #show: wstemplate.with(
   title: "Paiagram 1: World Design",
   description: "Immutable data structures.",
-  created: datetime(year: 2026, month: 11, day: 10),
+  created: datetime(year: 2026, month: 11, day: 13),
   tags: ("rust", "paiagram"),
   author: jeremy-gao,
 )
@@ -12,27 +12,25 @@ visualizing transport timetables. Visit #elink("https://paiagram.com") to try ou
 
 All editors have a "world", which is the centralized storage of the current editing state. A text
 editor's world would be the current text edit buffer. For Paiagram, it is the trips, routes, nodes,
-and intervals that construct the transit network.
+and intervals that construct the transit network. The most difficult part during the development of
+Paiagram was designing a world model that satisfies all the following:
 
-The most difficult part during the development of Paiagram was designing a world model that
-satisfies all of the following:
-
-- Fast
-- Lightweight, even when I need to use it across multiple threads
-- Can be (de)serialized via serde
-- Supports undo and redo
-- Supports extensions.
-- Multiuser collaboration.
+- is fast
+- is lightweight, even when I need to use it across multiple threads
+- can be (de)serialized via serde
+- supports undo and redo
+- supports extensions.
+- can be used for multiuser collaboration.
 
 These are the reasons why I used immutable data structures. Before discussing immutable data
-structures, I want to first talk about the command--source pattern, and why I eventually abandoned
-it.
+structures, I want to first talk about few design patterns that I tried in Paiagram, and why I
+eventually abandoned them.
 
 = Command and Conquer
 
 Inside the editor, the user may perform some actions, maybe revert them, and do some other stuff.
-Thus, we can make each action, such as shifting the departure time of a trip, a command that changes
-the world.
+Thus, we can make each action a command that changes the world, such as shifting the departure time
+of a trip.
 
 Traditional models, such as the one #link("https://doc.qt.io/qt-6/qundocommand.html")[used by Qt],
 don't produce counter commands, instead they have `undo` and `redo` on a single command. Thinking
@@ -73,22 +71,10 @@ commands in general:
 Undos aren't the only reason why I eventually choese imbl. I wrote an overcomplicated implementation
 for my world model before that.
 
-= Persistent Keys
-
-_TODO_
-
-Summary:
-
-- twitter snowflakes (https://en.wikipedia.org/wiki/Snowflake_ID), Also Paiagram should lwk
-- switch to
-  https://github.com/mastodon/mastodon/blob/5e796dc6f85b37c8378fe01cfd8ac23222c89eea/lib/mastodon/snowflake.rb
-  in the future.
-
 = SoAs Are Not That Convenient
 
 I set "performance" as one of the main goals for the world model. At a first glance, the _SoA_
 paradigm, which stands for _structure of arrays_, seemed like a good choice.
-
 
 The most common way to store some data is _array of structures_, or AoS for short. It is the reverse
 of _structure of arrays_. The idea of AoS is to store the data inside a big vector, and each
@@ -105,7 +91,7 @@ struct MyDatum {
 struct Data(Vec<MyDatum>);
 ```
 
-Because of alignments and other issues, the overall size of MyDatum would bigger than 8 bytes + 1
+Because of alignments and other issues, the overall size of MyDatum would be bigger than 8 bytes + 1
 byte + 24 bytes = 33 bytes. On my machine, Rust would insert 7 extra bytes and make it 40 bytes in
 total. #footnote[
   See https://en.wikipedia.org/wiki/Data_structure_alignment for more details
@@ -172,8 +158,32 @@ Summary:
 - We have persistent keys but because entities want to solve the aba problem we can't insert an old
   key into the world to do undo and redo
 - also makes slotmap unusable
-- cheesecake?
-- 2141 Granville St, Vancouver, BC V6H 3E9
+
+= Persistent Keys
+
+Let's say we have a world. The world has some data. For the sake of convenience, it's better to let
+the user take a _reference_ to the data instead of giving the user the data themselves. Thus, we can
+use some IDs to reference the data.
+
+How to design the ID?
+
+Let's start with a strictly incremental counter. In this way, we would have a central registry that
+stores how many keys we have issued so far, and we can request a new key each time we want to insert
+something. However, multiple clients will race against each other simply to generate new keys, which
+leads to significant lags.#footnote[
+  This isn't really a problem when there's only one client, and we can use `AtomicUsize` instead.
+]
+
+Another way is to simply use the name of something, say the name of a train trip "ICE 999" or
+"G6666". But names change, and relying on something that would change often causes desyncs.
+
+Summary:
+
+- twitter snowflakes (https://en.wikipedia.org/wiki/Snowflake_ID), Also Paiagram should lwk switch
+  to
+  https://github.com/mastodon/mastodon/blob/5e796dc6f85b37c8378fe01cfd8ac23222c89eea/lib/mastodon/snowflake.rb
+  in the future.
+
 
 = Immutable Data Structures
 
@@ -187,7 +197,7 @@ Summary:
 
 = One Year of Paiagram
 
-I created the first commit on Nov. 4, 2025 PT.
+I created the first commit on Nov. 4, 2025 PT.#footnote[When we still have Pacific Standard Time]
 
 _TODO_
 
