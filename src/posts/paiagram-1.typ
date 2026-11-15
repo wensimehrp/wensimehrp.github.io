@@ -187,7 +187,38 @@ Summary:
 
 = Immutable Data Structures
 
-_TODO_
+#let imbl-ftn = footnote[See more details at https://docs.rs/imbl]
+
+Immutable data structures are data structures which can be copied and modified efficiently without
+altering the original #imbl-ftn. The simplist example of an immutable data structure might be a cons
+list:
+
+#html.div(class: "mx-auto w-fit")[_IMAGE TODO, I will draw it myself_]
+
+In reailty, the computer won't know when to clear each node, so each node carries a resources
+release reference: a counter. The counter shows how many datums#footnote[This is getting weirder.]
+still holds a reference to the cons node. When the counter reaches 0, the computer frees up the
+memory occupied by the node. Of course, a cons list is not enough for Paiagram.
+
+#let complexity-ftn = footnote[Like Rust's `std::collections::BTreeMap`, most operations on `OrdMap`
+  is $O(log n)$. However, most operations on `imbl`'s `HashMap` is not $O(1)$, instead they are also
+  $O(log n)$ as they are implemented using trees.
+]
+
+Paiagram uses the `OrdMap` type from the crate `imbl`, which is implemented using a B+Tree. `OrdMap`
+and `imbl`'s `HashMap` both provide some generic key--value storage #complexity-ftn; sometimes
+accessing values stored in a `HashMap` is faster than `OrdMap`. However, key--value pairs stored in
+OrdMap are always ordered (hence the name #strong[Ord]Map). `OrdMap` also have a very special
+API#footnote[https://docs.rs/imbl/latest/imbl/struct.GenericOrdMap.html#method.diff].
+
+The `diff` API returns an iterator that outputs the difference between two `OrdMap`s. Normally,
+doing so would walk through each pair in both maps#footnote[See the #link(
+    "https://doc.rust-lang.org/stable/std/collections/struct.BTreeSet.html#method.symmetric_difference",
+  )[implementation] of `BTreeSet::symmetric_difference` in the Rust standard library.]. However, if
+two `OrdMap`s already share most of their contents, the iterator can simply compare the pointers of
+their subtrees; if two subtrees have the same address, their contents must be the same.
+
+TODO: explain how tf do they share contents arc stuff blah blah blah
 
 Summary:
 - Sharing data between threads
@@ -197,7 +228,8 @@ Summary:
 
 = One Year of Paiagram
 
-I created the first commit on Nov. 4, 2025 PT.#footnote[When we still have Pacific Standard Time]
+I created the first commit on Nov. 4, 2025 PT.#footnote[When we had Pacific Standard Time and
+  Mountain Standard Time]
 
 _TODO_
 
