@@ -83,6 +83,10 @@ exit 0
         ),
         c,
       )
+      h.footer(class: "my-10 prose dark:prose-invert text-center mx-auto")[
+        Licensed under CC BY 4.0\
+        #link(<index>)[Return to home]
+      ]
     })
   })
 }
@@ -191,6 +195,6 @@ exit 0
       },
     )
   ],
-)
+) <index>
 
 #include "atom.typ"
