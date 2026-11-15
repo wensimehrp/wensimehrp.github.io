@@ -179,11 +179,11 @@ Another way is to simply use the name of something, say the name of a train trip
 
 Summary:
 
-- twitter snowflakes (https://en.wikipedia.org/wiki/Snowflake_ID), Also Paiagram should lwk switch
-  to
-  https://github.com/mastodon/mastodon/blob/5e796dc6f85b37c8378fe01cfd8ac23222c89eea/lib/mastodon/snowflake.rb
-  in the future.
+- twitter snowflakes (https://en.wikipedia.org/wiki/Snowflake_ID)
 
+// Also Paiagram should lwk switch to
+// https://github.com/mastodon/mastodon/blob/5e796dc6f85b37c8378fe01cfd8ac23222c89eea/lib/mastodon/snowflake.rb
+// in the future.
 
 = OrdMap
 
@@ -200,9 +200,9 @@ release reference: a counter. The counter shows how many datums#footnote[This is
 still holds a reference to the cons node. When the counter reaches 0, the computer frees up the
 memory occupied by the node. Of course, a cons list is not enough for Paiagram.
 
-#let complexity-ftn = footnote[Like Rust's `std::collections::BTreeMap`, most operations on `OrdMap`
-  is $O(log n)$. However, most operations on `imbl`'s `HashMap` is not $O(1)$, instead they are also
-  $O(log n)$ as they are implemented using trees.
+#let complexity-ftn = footnote[Like Rust's ```rust std::collections::BTreeMap```, most operations on
+  `OrdMap` is $O(log n)$. However, most operations on `imbl`'s `HashMap` is not $O(1)$, instead they
+  are also $O(log n)$ as they were implemented as trees.
 ]
 
 Paiagram uses the `OrdMap` type from the crate `imbl`, which is implemented using a B+Tree. `OrdMap`
@@ -233,10 +233,19 @@ It feels like a little deterministic garbage collector #emoji.face.beam.
 
 = Trunk
 
+A common reason why apps run slow is they put every single task in one thread, including UI, IO, and
+other sorts of random calculations, such as calculating cache and updating the world. Though, UI and
+IO are separate topics of their own.
+
+Let's start with an example: importing. Paiagram allows importing from other formats. Each format
+handler simply outputs a new _World_ with data in it. So the app has the new world, how should it
+merge the new world with the existing world? Unfortunately, this step can only be done on the main
+thread to avoid desyncs.
+
+TODO: another example read from existing world and do some edits bla bla bla.
+
 `OrdMap` is thread safe. This means different procedures running on different threads can logically
 own their distinct copy of the world, while still sharing data and saving RAM.
-
-TODO: thread blah blah blah
 
 The `diff` API#footnote[https://docs.rs/imbl/latest/imbl/struct.GenericOrdMap.html#method.diff]
 returns an iterator that outputs the difference between two `OrdMap`s. Normally, doing so would walk
@@ -256,9 +265,7 @@ Summary:
 I created the first commit on Nov. 4, 2025 PT.#footnote[When we had Pacific Standard Time and
   Mountain Standard Time]
 
-_TODO_
-
-Summary:
+TODO Summary:
 - Paiagram 0.5: Side Quests (separate post)
   - Haita, Typst HTML, Cloudflare pages, multithreading in web browser
 - A lot of new features
