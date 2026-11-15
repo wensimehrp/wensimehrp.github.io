@@ -2,7 +2,7 @@
 #show: wstemplate.with(
   title: "Paiagram 1: World Design",
   description: "Immutable data structures.",
-  created: datetime(year: 2026, month: 11, day: 13),
+  created: datetime(year: 2026, month: 11, day: 15),
   tags: ("rust", "paiagram"),
   author: jeremy-gao,
 )
@@ -28,9 +28,9 @@ eventually abandoned them.
 
 = Command and Conquer
 
-Inside the editor, the user may perform some actions, maybe revert them, and do some other stuff.
-Thus, we can make each action a command that changes the world, such as shifting the departure time
-of a trip.
+The user may perform some actions in the editor, maybe revert them, and do some other stuff. Thus,
+we can make each action a command that changes the world, such as shifting the departure time of a
+trip.
 
 Traditional models, such as the one #link("https://doc.qt.io/qt-6/qundocommand.html")[used by Qt],
 don't produce counter commands, instead they have `undo` and `redo` on a single command. Thinking
@@ -165,7 +165,7 @@ Let's say we have a world. The world has some data. For the sake of convenience,
 the user take a _reference_ to the data instead of giving the user the data themselves. Thus, we can
 use some IDs to reference the data.
 
-How to design the ID?
+But how to design the ID?
 
 Let's start with a strictly incremental counter. In this way, we would have a central registry that
 stores how many keys we have issued so far, and we can request a new key each time we want to insert
@@ -185,7 +185,7 @@ Summary:
   in the future.
 
 
-= Immutable Data Structures
+= OrdMap
 
 #let imbl-ftn = footnote[See more details at https://docs.rs/imbl]
 
@@ -207,22 +207,47 @@ memory occupied by the node. Of course, a cons list is not enough for Paiagram.
 
 Paiagram uses the `OrdMap` type from the crate `imbl`, which is implemented using a B+Tree. `OrdMap`
 and `imbl`'s `HashMap` both provide some generic key--value storage #complexity-ftn; sometimes
-accessing values stored in a `HashMap` is faster than `OrdMap`. However, key--value pairs stored in
-OrdMap are always ordered (hence the name #strong[Ord]Map). `OrdMap` also have a very special
-API#footnote[https://docs.rs/imbl/latest/imbl/struct.GenericOrdMap.html#method.diff].
+accessing values stored in a `HashMap` is faster than `OrdMap`, but key--value pairs stored in
+OrdMap are always ordered (hence the name #strong[Ord]Map), and this behaviour is more predictable
+than `HashMap`'s hashes. Additionally, because our IDs start with timestamps, all key--value pairs
+stored in the map are also sorted based on their creation time.
 
-The `diff` API returns an iterator that outputs the difference between two `OrdMap`s. Normally,
-doing so would walk through each pair in both maps#footnote[See the #link(
+Using such data structures makes some function signatures extremely simple: instead of having to
+take a reference (immutable or mutable), any APIs that need to interact with the world can simply
+_consume_ the world and take the ownership:
+
+```rust
+// before
+fn expensive_calc(world: &mut World) {
+    // oh... I can't send this to another thread unless I clone it or wrap it in Arc
+}
+
+// after
+fn expensive_calc(world: World) {
+    // This is better; we still have to call .clone() somewhere,
+    // but it is cheap as everything is shared!
+}
+```
+
+It feels like a little deterministic garbage collector #emoji.face.beam.
+
+= Trunk
+
+`OrdMap` is thread safe. This means different procedures running on different threads can logically
+own their distinct copy of the world, while still sharing data and saving RAM.
+
+TODO: thread blah blah blah
+
+The `diff` API#footnote[https://docs.rs/imbl/latest/imbl/struct.GenericOrdMap.html#method.diff]
+returns an iterator that outputs the difference between two `OrdMap`s. Normally, doing so would walk
+through each pair in both maps#footnote[See the #link(
     "https://doc.rust-lang.org/stable/std/collections/struct.BTreeSet.html#method.symmetric_difference",
-  )[implementation] of `BTreeSet::symmetric_difference` in the Rust standard library.]. However, if
-two `OrdMap`s already share most of their contents, the iterator can simply compare the pointers of
-their subtrees; if two subtrees have the same address, their contents must be the same.
-
-TODO: explain how tf do they share contents arc stuff blah blah blah
+  )[implementation] of ```rust BTreeSet::symmetric_difference``` in the Rust standard library.].
+However, if two `OrdMap`s already share most of their contents, the iterator can simply compare the
+pointers of their subtrees; if two subtrees have the same address, their contents must be the same.
 
 Summary:
-- Sharing data between threads
-- Feels like a little deterministic GC
+- Merging world state must be done on the main thread, which can be expensive sometimes
 - Saving history is now extremely easy as we only need to swap a few pointers
 - In the future each undo and redo will be implemented as (World, World) to match multiuser collab
 
