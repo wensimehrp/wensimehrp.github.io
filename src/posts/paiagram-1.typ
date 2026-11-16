@@ -22,58 +22,12 @@ Paiagram was designing a world model that satisfies all the following:
 - supports extensions.
 - can be used for multiuser collaboration.
 
-These are the reasons why I used immutable data structures. Before discussing immutable data
-structures, I want to first talk about few design patterns that I tried in Paiagram, and why I
-eventually abandoned them.
-
-= Command and Conquer
-
-The user may perform some actions in the editor, maybe revert them, and do some other stuff. Thus,
-we can make each action a command that changes the world, such as shifting the departure time of a
-trip.
-
-Traditional models, such as the one #link("https://doc.qt.io/qt-6/qundocommand.html")[used by Qt],
-don't produce counter commands, instead they have `undo` and `redo` on a single command. Thinking
-their approach was stupid, I started with the following instead:
-
-```rust
-enum Command {
-    AddTrain(..),
-    RemoveTrain(..),
-    ShiftTripTime(..),
-}
-
-impl Command {
-    fn act(self, world: World) -> Result<Command, E> {
-        // in this case E is some generic error type
-        use Command::*;
-        match self {
-            AddTrain(..) => Ok(RemoveTrain(..)),
-            RemoveTrain(..) => Ok(AddTrain(..)),
-            ShiftTripTime(..) => Ok(ShiftTripTime(..)),
-        }
-    }
-}
-```
-
-Each command produces a countercommand that does the exact opposite when being committed, and that
-countercommand would be pushed into an undo stack. The command pattern works particularly well, and
-doesn't require an extra `undo` method. But applications grow and get complicated every; manually
-wiring each command to a counter command introduces _a lot_ of bugs. There are more drawbacks to
-commands in general:
-
-- It is easy to lose cached states, and the countercommand must store cached data accordingly.
-- Some command variant might be huge. Though this could be solved by wrapping the variant in a Box.
-- Changing the internal representation of one command meaning rewriting the mapping logic and
-  changing another command's internals. A lot of the logic is already available somewhere else in
-  the codebase, and the command system is just duplicating them.
-
-Undos aren't the only reason why I eventually choese imbl. I wrote an overcomplicated implementation
-for my world model before that.
+These are the reasons why I used immutable data structures. Before discussing them, I want to first
+talk about few design patterns that I tried in Paiagram, and why I eventually abandoned them.
 
 = SoAs Are Not That Convenient
 
-I set "performance" as one of the main goals for the world model. At a first glance, the _SoA_
+I set "high performance" as one of the main goals for the world model. At a first glance, the _SoA_
 paradigm, which stands for _structure of arrays_, seemed like a good choice.
 
 The most common way to store some data is _array of structures_, or AoS for short. It is the reverse
@@ -93,9 +47,7 @@ struct Data(Vec<MyDatum>);
 
 Because of alignments and other issues, the overall size of MyDatum would be bigger than 8 bytes + 1
 byte + 24 bytes = 33 bytes. On my machine, Rust would insert 7 extra bytes and make it 40 bytes in
-total. #footnote[
-  See https://en.wikipedia.org/wiki/Data_structure_alignment for more details
-]
+total #footnote[See https://en.wikipedia.org/wiki/Data_structure_alignment for more details].
 
 SoA reverses this design. Instead of storing _structures_ in _arrays_, SoA instead stores _arrays_
 in _structures_:
@@ -170,20 +122,91 @@ But how to design the ID?
 Let's start with a strictly incremental counter. In this way, we would have a central registry that
 stores how many keys we have issued so far, and we can request a new key each time we want to insert
 something. However, multiple clients will race against each other simply to generate new keys, which
-leads to significant lags.#footnote[
+leads to significant lags #footnote[
   This isn't really a problem when there's only one client, and we can use `AtomicUsize` instead.
-]
+].
 
 Another way is to simply use the name of something, say the name of a train trip "ICE 999" or
 "G6666". But names change, and relying on something that would change often causes desyncs.
 
-Summary:
+The solution is to use an ID that can be generated based on resources that are available in each
+client, instead of some centralized authority. I chose the combination of timestamp + client order +
+local counter over random entropy (e.g. UUID v4) because it provides some practical benefits:
 
-- twitter snowflakes (https://en.wikipedia.org/wiki/Snowflake_ID)
+- Keys can be ordered based on their timestamp.
+- It does not rely on a local random number generator.
 
-// Also Paiagram should lwk switch to
-// https://github.com/mastodon/mastodon/blob/5e796dc6f85b37c8378fe01cfd8ac23222c89eea/lib/mastodon/snowflake.rb
-// in the future.
+This way, there would be 65k available IDs for each centisecond. The downside is that if the client
+ran out of IDs for this centisecond, it would have to wait for the next centisecond -- which is not
+a problem for our scale at all!#footnote[
+  To be frank, using a timestamp actually introduces more problems. A client's internal timestamp
+  might leap backwards, which means it might collide with an existing ID. I haven't ran into such
+  problems yet, and they are quite rare in general. Yet, they are definitely more common than RNG
+  collisions.
+]. In fact, this is the exact method Twitter #footnote[I like the word Twitter, becasue it portrays
+  the saying 树林子大了什么鸟都有.] used to generate #link(
+  "https://en.wikipedia.org/wiki/Snowflake_ID",
+)[unique IDs] for their posts.
+
+= Command and Conquer
+
+The user may perform some actions in the editor, maybe revert them, and do some other stuff. Thus,
+we can make each action a command that changes the world, such as shifting the departure time of a
+trip.
+
+Traditional models, such as the one #link("https://doc.qt.io/qt-6/qundocommand.html")[used by Qt],
+require `undo` and `redo` on every command. My initial idea was to map each command to a
+countercommand. For example, the countercommand of `AddTrain` would be `RemoveTrain`, and the
+countercommand of `ShiftTripTime` would be itself. This way, instead of writing `undo` and `redo`,
+we can simply only have `act` on a command:
+
+```rust
+enum Command {
+    AddTrain(..),
+    RemoveTrain(..),
+    ShiftTripTime(..),
+    // A macro that contains many commands
+    // In reailty it is better to use Box<[Command]> to avoid accident pushes
+    Macro(Vec<Command>)
+}
+
+impl Command {
+    // `act` consumes the command and modifies the world.
+    // in this case E is some generic error type
+    fn act(self, world: &mut World) -> Result<Command, E> {
+        use Command::*;
+        match self {
+            AddTrain(..)      => Ok(RemoveTrain(..)),
+            RemoveTrain(..)   => Ok(AddTrain(..)),
+            ShiftTripTime(..) => Ok(ShiftTripTime(..)),
+            Macro(inner)      => Ok(
+                // this code doesn't work,
+                // but it basically walks over each command in the macro,
+                // recursively applies each command to the world,
+                // collects them,
+                // and reverses the order of each command in the macro.
+                inner.into_iter()
+                    .map(|cmd| cmd.act(world))
+                    .collect::<Vec<_>>()
+                    .rev()
+            )
+        }
+    }
+}
+```
+
+The app produces a countercommand when commiting a command, and that countercommand would be pushed
+into an undo stack. The command pattern works particularly well, and doesn't require an extra `undo`
+method. But Paiagram grows and gets complicated; manually wiring each command to a countercommand
+introduces _a lot_ of bugs. There are more drawbacks to commands in general:
+
+- It is easy to lose cached states, and the countercommand must store cached data accordingly.
+- Some command variant might be huge. Though this could be solved by wrapping the variant in a Box.
+- Changing the internal representation of one command meaning rewriting the mapping logic and
+  changing another command's internals. A lot of the logic is already available somewhere else in
+  the codebase, and the command system is just duplicating them.
+
+So, could there be a way to account all edits without having to list each edit individually?
 
 = OrdMap
 
@@ -247,7 +270,7 @@ TODO: another example read from existing world and do some edits bla bla bla.
 `OrdMap` is thread safe. This means different procedures running on different threads can logically
 own their distinct copy of the world, while still sharing data and saving RAM.
 
-The `diff` API#footnote[https://docs.rs/imbl/latest/imbl/struct.GenericOrdMap.html#method.diff]
+The #link("https://docs.rs/imbl/latest/imbl/struct.GenericOrdMap.html#method.diff")[`diff` API]
 returns an iterator that outputs the difference between two `OrdMap`s. Normally, doing so would walk
 through each pair in both maps#footnote[See the #link(
     "https://doc.rust-lang.org/stable/std/collections/struct.BTreeSet.html#method.symmetric_difference",
