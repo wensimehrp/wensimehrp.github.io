@@ -262,11 +262,14 @@ Summary:
 
 = One Year of Paiagram
 
-I created the first commit on Nov. 4, 2025 PT.#footnote[When we had Pacific Standard Time and
-  Mountain Standard Time]
+I don't have much experience in writing large apps, nor am I familiar with Rust itself. Still, I
+found immutable data structures to be the only working for Paiagram's case. It is also a great
+solution.
 
-TODO Summary:
-- Paiagram 0.5: Side Quests (separate post)
-  - Haita, Typst HTML, Cloudflare pages, multithreading in web browser
-- A lot of new features
-- Learned a lot of stuff
+I created the first commit on Nov. 4, 2025 PT. Over the last 12 months, I've made all kinds of
+changes to the app; though my focus sometimes shifted, and I took many detours during development,
+including learning Typst html export, making a custom documentation framework, and building more
+sites --- these contents will be covered in a separate post. I enjoyed building, failing, and
+learning new stuff in the process.
+
+Thank you for reading my blog post.
