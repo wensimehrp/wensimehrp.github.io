@@ -67,6 +67,8 @@
           ftn,
         ) in footnotes.enumerate() [
           #html.li({
+            ftn.content
+            [ ]
             {
               show html.elem.where(tag: "a"): set html.elem(attrs: (
                 aria-label: "Back to reference " + str(idx + 1),
@@ -74,10 +76,8 @@
                 class: "no-underline hover:underline mr-4",
                 style: "user-select: none; margin-right: 0.25rem",
               ))
-              link(ftn.source)[↑]
+              link(ftn.source)[↩︎]
             }
-            [ ]
-            ftn.content
           }) #ftn.target
         ],
       )
