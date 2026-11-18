@@ -17,7 +17,7 @@ exit 0
     "styles.css",
     {
       ```css
-      @import url('https://fonts.googleapis.com/css2?family=Libertinus+Serif+Display&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Libertinus+Math&family=Libertinus+Serif+Display&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
 
       :root {
           scroll-behavior: smooth;
@@ -27,6 +27,14 @@ exit 0
           0% { background-color: transparent; }
           10% { background-color: rgba(253, 224, 71, 0.8); }
           100% { background-color: transparent; }
+      }
+
+      math {
+          font-family: "Libertinus Math";
+      }
+
+      code {
+          font-family: "Roboto Mono" !important;
       }
 
       ```.text
