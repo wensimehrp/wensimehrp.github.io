@@ -105,6 +105,7 @@ exit 0
     "src/posts/paiagram-0.typ",
     "src/posts/paiagram-1.typ",
     "src/posts/2025-summary.typ",
+    "src/posts/2026-summary.typ",
     "src/posts/typst-animations.typ",
     "src/posts/building-websites-with-just-typst.typ",
     "src/posts/css-selector-highlights.typ",

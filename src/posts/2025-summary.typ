@@ -57,7 +57,7 @@ and number formats. This one also uses WASM.
   "https://github.com/wensimehrp/nexusrail",
 )[NexusRail]
 
-= Paiagram
+= Paiagram <paiagram-2025-summary>
 
 The super-duper fun project I am doing right now. Take a look at the #elink(
   "https://github.com/wensimehrp/paiagram",
