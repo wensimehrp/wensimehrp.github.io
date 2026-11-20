@@ -11,7 +11,7 @@ _This post is part of the series of dev diaries about Paiagram, an application f
 visualizing transport timetables. Visit #elink("https://paiagram.com") to try out the app!_
 
 All editors have a "world", which is the centralized storage of the current editing state. A text
-editor's world would be the current text edit buffer. For Paiagram, it is the trips, routes, nodes,
+editor's world would be the current text edit buffer. Paiagram's world is the trips, routes, nodes,
 and intervals that construct the transit network. The most difficult part during the development of
 Paiagram was designing a world model that satisfies all the following:
 
@@ -20,7 +20,7 @@ Paiagram was designing a world model that satisfies all the following:
 - can be (de)serialized via serde
 - supports undo and redo
 - supports extensions.
-- can be used for multiuser collaboration.
+- supports multiuser collaboration.
 
 These are the reasons why I used immutable data structures. Before discussing them, I want to first
 talk about few design patterns that I tried in Paiagram, and why I eventually abandoned them.
@@ -47,7 +47,9 @@ struct Data(Vec<MyDatum>);
 
 Because of alignments and other issues, the overall size of MyDatum would be bigger than 8 bytes + 1
 byte + 24 bytes = 33 bytes. On my machine, Rust would insert 7 extra bytes and make it 40 bytes in
-total #footnote[See https://en.wikipedia.org/wiki/Data_structure_alignment for more details].
+total #footnote[Data alignment is more complicated than what I've covered here. For more details,
+  check out #link("https://en.wikipedia.org/wiki/Data_structure_alignment")[this article] on
+  Wikipedia.].
 
 SoA reverses this design. Instead of storing _structures_ in _arrays_, SoA instead stores _arrays_
 in _structures_:
@@ -64,8 +66,8 @@ Each piece of data is stored directly against each other in RAM, which leaves no
 In addition, this pattern is also particularly well for procedures that operate only on one field.
 
 Structure of arrays (and to an extent, the Entity--Component--System paradigm), is best when the app
-frequently accesses homogenous data and processes them in batches. While this is true for many types
-of games, as they tend to share similar components accross different entities, each entity in
+frequently accesses homogeneous data and processes them in batches. While this is true for many
+types of games, as they tend to share similar components across different entities, each entity in
 Paiagram carries its _unique set_ of data, and the components of different types of entities are
 barely shareable.
 
@@ -82,9 +84,9 @@ reasons:
     I tried using #link(
       "https://docs.rs/moonshine-core/latest/moonshine_core/#-moonshine-kind",
     )[`moonshine-kind`] to wrap around my entities, but it was an extremely erroneous approach.
-  ]
+  ]. This leads to multiple type-check passes and they are annoying.
 - Undo/Redo becomes tedious as it is impossible to insert an old Entity into the World.
-- It is a game engine, not a library. Bevy introduces hidden bloat.
+- It is a game engine, not a library. Bevy introduces much hidden bloat.
 
 #let bevy-ftn = footnote[
   #let aba = link("https://en.wikipedia.org/wiki/ABA_problem")[ABA problem]
@@ -103,6 +105,19 @@ reasons:
 SoA only works well with direct numerical indices, i.e. `usize`, `u32`, and `u64`. This is a not an
 issue for Bevy and its ECS, since it's possible to directly query the components attached to an
 entity by indexing the ECS world using `Entity` #bevy-ftn.
+
+Although I removed Bevy, I still like the SoA structure mainly because of its _theoretical_
+benefits. I ended up with this:
+
+```rust
+struct TripCollection {
+    indexes: HashMap<TripKey, usize>,
+    names: Vec<String>,
+    schedules: Vec<TripSchedule>,
+    service_classes: Vec<Option<ServiceClassKey>>,
+    // ...
+}
+```
 
 _TODO_
 
@@ -176,9 +191,15 @@ impl Command {
     fn act(self, world: &mut World) -> Result<Command, E> {
         use Command::*;
         match self {
+            // The reverse of adding a train is removing a train
             AddTrain(..)      => Ok(RemoveTrain(..)),
+            // The reverse of removing a train is adding a train
             RemoveTrain(..)   => Ok(AddTrain(..)),
+            // The reverse of shifting a trip's time is still shifting a
+            // trip's time... but negative. Of course there are overflow stuff,
+            // but we don't care about them. Let it be a bug and stay.
             ShiftTripTime(..) => Ok(ShiftTripTime(..)),
+            // big brother
             Macro(inner)      => Ok(
                 // this code doesn't work,
                 // but it basically walks over each command in the macro,
@@ -187,53 +208,88 @@ impl Command {
                 // and reverses the order of each command in the macro.
                 inner.into_iter()
                     .map(|cmd| cmd.act(world))
-                    .collect::<Vec<_>>()
                     .rev()
+                    .collect::<Vec<_>>()
             )
         }
     }
 }
 ```
 
-The app produces a countercommand when commiting a command, and that countercommand would be pushed
-into an undo stack. The command pattern works particularly well, and doesn't require an extra `undo`
-method. But Paiagram grows and gets complicated; manually wiring each command to a countercommand
-introduces _a lot_ of bugs. There are more drawbacks to commands in general:
+The command pattern works particularly well, and doesn't require an extra `undo` method, and any
+extra components can simply take a reference to the world and return a single `Command`, thanks to
+the `Command::Macro` variant. The app then produces a countercommand when committing a command, and
+that countercommand would be pushed into an undo stack.
 
-- It is easy to lose cached states, and the countercommand must store cached data accordingly.
-- Some command variant might be huge. Though this could be solved by wrapping the variant in a Box.
+But Paiagram grows and gets complicated; manually wiring each command to a countercommand introduces
+_a lot_ of bugs. There are more drawbacks to commands in general:
+
+- The countercommand must store cached data accordingly, which sometimes leads to interesting
+  results. For example, removing a station might result in a giant macro that includes one
+  `InsertStation` and fifty `InsertTrip`s.
+- Some command variant might be huge. Though this could be solved by wrapping the variant in a `Box`
+  smart pointer. Commands don't need to be fast anyways.
 - Changing the internal representation of one command meaning rewriting the mapping logic and
   changing another command's internals. A lot of the logic is already available somewhere else in
   the codebase, and the command system is just duplicating them.
 
 So, could there be a way to account all edits without having to list each edit individually?
 
-= OrdMap
+= Immutable Data Structures
 
 #let imbl-ftn = footnote[See more details at https://docs.rs/imbl]
 
+I found immutable data structures the solution to undo and redos.
+
 Immutable data structures are data structures which can be copied and modified efficiently without
-altering the original #imbl-ftn. The simplist example of an immutable data structure might be a cons
+altering the original #imbl-ftn. The simplest example of an immutable data structure might be a cons
 list:
 
 #html.div(class: "mx-auto w-fit")[_IMAGE TODO, I will draw it myself_]
 
-In reailty, the computer won't know when to clear each node, so each node carries a resources
-release reference: a counter. The counter shows how many datums#footnote[This is getting weirder.]
-still holds a reference to the cons node. When the counter reaches 0, the computer frees up the
-memory occupied by the node. Of course, a cons list is not enough for Paiagram.
+But before we talk about how this is useful, we'll have to take a short detour to...
+
+== Ownership and Borrowing
+
+... Ownership, which are Rust bros' favourite.#footnote[So this _is_ a Rust course eh?]
+
+Ownership is a bit of a complicated topic, and #link(
+  "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html",
+)[the official documentation] has a more precise explanation for it. To be concise, a variable may
+own or borrow a piece of data. It is usually easier to work with _owned_ data instead of _borrowed_
+data, as owned data tend have less lifetime issues. A full ownership of a variable on a data usually
+implies the following:
+
+- The context/variable that owns the data can _read_ the data.
+- The context/variable that owns the data can _mutate_ the data.
+- The context/variable that owns the data can _transfer the ownership_, which includes destroying
+  the data.
+
+And we can use the duck test on immutable data structures:
+
+-
+
+== OrdMap
+
+In reality, the computer won't know when to clear each node, so each node carries a reference
+counter. The counter shows how many datums#footnote[This is getting weirder.] still hold a reference
+to the cons node. When the counter reaches 0, i.e., no datum references the cons node, the computer
+frees up the memory occupied by the node. Of course, a cons list is not enough for Paiagram.
 
 #let complexity-ftn = footnote[Like Rust's ```rust std::collections::BTreeMap```, most operations on
   `OrdMap` is $O(log n)$. However, most operations on `imbl`'s `HashMap` is not $O(1)$, instead they
   are also $O(log n)$ as they were implemented as trees.
+
+  But we don't really need to care about the complexity of data structures for Paiagram's data
+  sizes...
 ]
 
-Paiagram uses the `OrdMap` type from the crate `imbl`, which is implemented using a B+Tree. `OrdMap`
-and `imbl`'s `HashMap` both provide some generic key--value storage #complexity-ftn; sometimes
-accessing values stored in a `HashMap` is faster than `OrdMap`, but key--value pairs stored in
-OrdMap are always ordered (hence the name #strong[Ord]Map), and this behaviour is more predictable
-than `HashMap`'s hashes. Additionally, because our IDs start with timestamps, all key--value pairs
-stored in the map are also sorted based on their creation time.
+Paiagram uses the `OrdMap` structure from the crate #link("https://docs.rs/imbl")[`imbl`], which is
+implemented using a B+Tree. `OrdMap` and `imbl`'s `HashMap` both provide some generic key--value
+storage #complexity-ftn. Accessing values stored in a `HashMap` is sometimes faster than `OrdMap`,
+but each key--value pair stored in OrdMap is always ordered (hence the name "Ord" Map), and this
+behaviour is more predictable than hashes. Additionally, because snowflake IDs start with
+timestamps, the pairs in the map are sorted based on the key's creation time.
 
 Using such data structures makes some function signatures extremely simple: instead of having to
 take a reference (immutable or mutable), any APIs that need to interact with the world can simply
@@ -254,29 +310,35 @@ fn expensive_calc(world: World) {
 
 It feels like a little deterministic garbage collector #emoji.face.beam.
 
+
+
 = Trunk
 
 A common reason why apps run slow is they put every single task in one thread, including UI, IO, and
-other sorts of random calculations, such as calculating cache and updating the world. Though, UI and
-IO are separate topics of their own.
+other sorts of random calculations, such as calculating cache and updating the world. UI and IO are
+separate topics of their own, though.
 
-Let's start with an example: importing. Paiagram allows importing from other formats. Each format
-handler simply outputs a new _World_ with data in it. So the app has the new world, how should it
-merge the new world with the existing world? Unfortunately, this step can only be done on the main
-thread to avoid desyncs.
+Let's start with importing new contents as an example. Paiagram allows importing from various other
+formats. Each format handler simply outputs a new _World_ with data in it. So the app has the new
+world, how should it merge the new world with the existing world? Unfortunately, this step can only
+be done on the main thread to avoid desyncs.
 
 TODO: another example read from existing world and do some edits bla bla bla.
 
 `OrdMap` is thread safe. This means different procedures running on different threads can logically
 own their distinct copy of the world, while still sharing data and saving RAM.
 
+#let btreeset-diff-impl = {
+  "https://doc.rust-lang.org/stable/std/collections/"
+  "struct.BTreeSet.html#method.symmetric_difference"
+}
+
 The #link("https://docs.rs/imbl/latest/imbl/struct.GenericOrdMap.html#method.diff")[`diff` API]
 returns an iterator that outputs the difference between two `OrdMap`s. Normally, doing so would walk
-through each pair in both maps#footnote[See the #link(
-    "https://doc.rust-lang.org/stable/std/collections/struct.BTreeSet.html#method.symmetric_difference",
-  )[implementation] of ```rust BTreeSet::symmetric_difference``` in the Rust standard library.].
-However, if two `OrdMap`s already share most of their contents, the iterator can simply compare the
-pointers of their subtrees; if two subtrees have the same address, their contents must be the same.
+through each pair in both maps#footnote[See the #link(btreeset-diff-impl)[implementation] of
+  ```rust BTreeSet::symmetric_difference``` in the Rust standard library.]. However, if two
+`OrdMap`s already share most of their contents, the iterator can simply compare the pointers of
+their subtrees; if two subtrees have the same address, their contents must be the same.
 
 Summary:
 - Merging world state must be done on the main thread, which can be expensive sometimes
@@ -286,13 +348,13 @@ Summary:
 = One Year of Paiagram
 
 I don't have much experience in writing large apps, nor am I familiar with Rust itself. Still, I
-found immutable data structures to be the only working for Paiagram's case. It is also a great
-solution.
+found immutable data structures to be the only working solution for Paiagram's case. It is also a
+great solution. Of course, there are a lot more that I didn't cover in this post.
 
 I created the first commit on Nov. 4, 2025 PT. Over the last 12 months, I've made all kinds of
 changes to the app; though my focus sometimes shifted, and I took many detours during development,
 including learning Typst html export, making a custom documentation framework, and building more
-sites --- these contents will be covered in a separate post. I enjoyed building, failing, and
-learning new stuff in the process.
+sites --- these will be covered in a separate post. I enjoyed building, failing, and learning new
+stuff in the process.
 
 Thank you for reading my blog post.
