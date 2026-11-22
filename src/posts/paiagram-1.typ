@@ -216,10 +216,10 @@ impl Command {
 }
 ```
 
-The command pattern works particularly well, and doesn't require an extra `undo` method, and any
-extra components can simply take a reference to the world and return a single `Command`, thanks to
-the `Command::Macro` variant. The app then produces a countercommand when committing a command, and
-that countercommand would be pushed into an undo stack.
+The command pattern works particularly well, and doesn't require an extra `undo` method. Any extra
+components simply take a reference to the world and return a single `Command`, thanks to the
+`Command::Macro` variant. The app then produces a countercommand when committing a command, and that
+countercommand would be pushed into an undo stack.
 
 But Paiagram grows and gets complicated; manually wiring each command to a countercommand introduces
 _a lot_ of bugs. There are more drawbacks to commands in general:
@@ -253,12 +253,17 @@ But before we talk about how this is useful, we'll have to take a short detour t
 
 ... Ownership, which is Rust bros' favourite #footnote[So this _is_ a Rust course eh?].
 
+#let iterator-lifetimes-ftn = footnote[
+  This is not always the case (hence the "tend to have"). For example, creating a function that
+  returns an iterator that creates temporary _owned_ data could be quite complicated.
+]
+
 Ownership is a bit of a complicated topic, and #link(
   "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html",
-)[the official documentation] has a more precise explanation for it. To be concise, a variable may
-own or borrow a piece of data, and it is usually easier to work with _owned_ data instead of
-_borrowed_ data, as owned data tend have less lifetime issues. A full ownership of a variable on a
-data usually implies the following:
+)[the official documentation] has a more precise explanation for it. Relevant to our situation, a
+variable may own or borrow a piece of data, and it is usually easier to work with _owned_ data
+instead of _borrowed_ data, as owned data tend to have less lifetime issues #iterator-lifetimes-ftn.
+A full ownership of a variable on a data usually implies the following:
 
 - The context/variable that owns the data can _read_ the data.
 - The context/variable that owns the data can _mutate_ the data.
