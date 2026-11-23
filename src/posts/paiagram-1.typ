@@ -2,7 +2,7 @@
 #show: wstemplate.with(
   title: "Paiagram 1: World Design",
   description: "Immutable data structures.",
-  created: datetime(year: 2026, month: 11, day: 15),
+  created: datetime(year: 2026, month: 11, day: 22),
   tags: ("rust", "paiagram"),
   author: jeremy-gao,
 )
@@ -247,6 +247,23 @@ list:
 
 #html.div(class: "mx-auto w-fit")[_IMAGE TODO, I will draw it myself_]
 
+== OrdMap
+
+#let complexity-ftn = footnote[Like Rust's ```rust std::collections::BTreeMap```, most operations on
+  `OrdMap` is $O(log n)$. However, most operations on `imbl`'s `HashMap` is not $O(1)$, instead they
+  are also $O(log n)$ as they were implemented as trees.
+
+  But we don't really need to care about the complexity of data structures for Paiagram's data
+  sizes...
+]
+
+Paiagram uses the `OrdMap` data structure from the crate #link("https://docs.rs/imbl")[`imbl`],
+which is implemented using a B+Tree. `OrdMap` and `imbl`'s `HashMap` both provide some generic
+key--value storage #complexity-ftn. Accessing values stored in a `HashMap` is sometimes faster than
+`OrdMap`, but each key--value pair stored in OrdMap is always ordered (hence the name "Ord" Map),
+and this behaviour is more predictable than hashes. Additionally, because snowflake IDs start with
+timestamps, the pairs in the map are sorted based on the key's creation time.
+
 But before we talk about how this is useful, we'll have to take a short detour to...
 
 == Ownership and Borrowing
@@ -260,8 +277,8 @@ But before we talk about how this is useful, we'll have to take a short detour t
 
 Ownership is a bit of a complicated topic, and #link(
   "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html",
-)[the official documentation] has a more precise explanation for it. Relevant to our situation, a
-variable may own or borrow a piece of data, and it is usually easier to work with _owned_ data
+)[the official documentation] has a thorough explanation on it. Relevant to our situation, a
+variable may _own_ or _borrow_ a piece of data, and it is usually easier to work with _owned_ data
 instead of _borrowed_ data, as owned data tend to have less lifetime issues #iterator-lifetimes-ftn.
 A full ownership of a variable on a data usually implies the following:
 
@@ -281,7 +298,7 @@ discussed in the next chapter). Say that there's a variable `x` that _holds_ an 
 
 #html.div(class: "mx-auto w-fit")[_IMAGE TODO, I will draw it myself_]
 
-`OrdMap`, as well as many other data structures, functions just like a `Vec` or a `HashMap`.
+`OrdMap`, as well as many other data structures, behaves just like a `Vec` or a `HashMap`.
 
 In reality, the computer won't know when to clear each node, so each node carries a reference
 counter. The counter shows how many datums #footnote[This is getting weirder.] still hold a
@@ -308,23 +325,6 @@ fn expensive_calc(world: World) {
 ```
 
 It feels like a little deterministic garbage collector #emoji.face.beam.
-
-== OrdMap
-
-#let complexity-ftn = footnote[Like Rust's ```rust std::collections::BTreeMap```, most operations on
-  `OrdMap` is $O(log n)$. However, most operations on `imbl`'s `HashMap` is not $O(1)$, instead they
-  are also $O(log n)$ as they were implemented as trees.
-
-  But we don't really need to care about the complexity of data structures for Paiagram's data
-  sizes...
-]
-
-Paiagram uses the `OrdMap` structure from the crate #link("https://docs.rs/imbl")[`imbl`], which is
-implemented using a B+Tree. `OrdMap` and `imbl`'s `HashMap` both provide some generic key--value
-storage #complexity-ftn. Accessing values stored in a `HashMap` is sometimes faster than `OrdMap`,
-but each key--value pair stored in OrdMap is always ordered (hence the name "Ord" Map), and this
-behaviour is more predictable than hashes. Additionally, because snowflake IDs start with
-timestamps, the pairs in the map are sorted based on the key's creation time.
 
 = Trunk
 
