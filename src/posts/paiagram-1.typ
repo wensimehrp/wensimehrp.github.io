@@ -329,33 +329,71 @@ It feels like a little deterministic garbage collector #emoji.face.beam.
 = Trunk
 
 A common reason why apps run slow is they put every single task in one thread, including UI, IO, and
-other sorts of random calculations, such as calculating cache and updating the world. UI and IO are
-separate topics of their own, though.
-
-Let's start with importing new contents as an example. Paiagram allows importing from various other
-formats. Each format handler simply outputs a new _World_ with data in it. So the app has the new
-world, how should it merge the new world with the existing world? Unfortunately, this step can only
-be done on the main thread to avoid desyncs.
-
-TODO: another example read from existing world and do some edits bla bla bla.
+other sorts of random calculations, such as calculating cache and updating the world. Though UI and
+IO are separate topics of their own.
 
 `OrdMap` is thread safe. This means different procedures running on different threads can logically
 own their distinct copy of the world, while still sharing data and saving RAM.
+
+Let's say the user runs an extension that changes something in the world. The extension could take
+much time to run, so we'd have to run it in a separate thread with its own (shared) copy of the
+world. The app now has to merge the changes into the main world after the extension finishes
+running. But where? Unfortunately, the answer would be the main thread, as merging the world on any
+threads other than the main thread would introduce significant synchronization problems, and
+potentially destroy the world.
+
+If the merge is not performed on the main thread, then the main thread might dispatch a new task
+just before the world on the main thread gets replaced by the merged world. Since the worker thread
+gets a copy of the main thread, the solution would be to send what's changed back to the main
+thread... Well we actually don't. Serialization is a big headache #emoji.face.frown #footnote[
+  We will have to serialize the difference for multiuser collaboration though, as they come in and
+  out through network requests. I wonder if it would be a good idea to just serialize it, though.
+  This way we can use the same functions for handling data coming from a worker thread and data
+  coming from the network.
+  ```rust
+  enum Difference {..}
+  fn main_loop() {
+      rx.recv_iter().chain(network_rx.recv_iter()).fold(world, handle_diff);
+  }
+  ```
+  But we can also do this (see the next section in the post about the diff API for details).
+  ```rust
+  enum Difference<'a> {..}
+  fn gen_difference_from_two_worlds((w1, w2): (World, World)) -> impl Iterator<Item = Diff(..)>;
+  fn main_loop() {
+      // we always get Difference<'static> from network_rx
+      rx.recv_iter()
+          .map(gen_difference_from_two_worlds)
+          .chain(network_rx.recv_iter())
+          .fold(world, handle_diff);
+  }
+  ```
+  Different layer of abstraction basically.
+].
+
+#html.div(class: "mx-auto w-fit")[_IMAGE TODO, I will draw it myself_]
 
 #let btreeset-diff-impl = {
   "https://doc.rust-lang.org/stable/std/collections/"
   "struct.BTreeSet.html#method.symmetric_difference"
 }
 
-The #link("https://docs.rs/imbl/latest/imbl/struct.GenericOrdMap.html#method.diff")[`diff` API]
-returns an iterator that outputs the difference between two `OrdMap`s. Normally, doing so would walk
-through each pair in both maps#footnote[See the #link(btreeset-diff-impl)[implementation] of
-  ```rust BTreeSet::symmetric_difference``` in the Rust standard library.]. However, if two
-`OrdMap`s already share most of their contents, the iterator can simply compare the pointers of
-their subtrees; if two subtrees have the same address, their contents must be the same.
+#let diff-api-link = link(
+  "https://docs.rs/imbl/latest/imbl/struct.GenericOrdMap.html#method.diff",
+)[`diff` API]
 
-Summary:
-- Merging world state must be done on the main thread, which can be expensive sometimes
+#let btreeset-diff-impl-ftn = footnote[See the #link(btreeset-diff-impl)[implementation] of
+  ```rust BTreeSet::symmetric_difference``` in the Rust standard library.]
+
+Instead, Paiagram sends both the initial world received by the worker thread and the updated world
+back to the main thread. The #diff-api-link returns an iterator that outputs the difference between
+two `OrdMap`s. Normally, doing so would walk through each pair in both maps #btreeset-diff-impl-ftn.
+However, if two `OrdMap`s already share most of their contents, the iterator can simply compare the
+pointers of their subtrees; if two subtrees have the same address, their contents must be the same.
+
+Although we must merge world states in the main thread, it is possible to parallelize this process,
+as the world is composed of several independent `OrdMap`s.
+
 - Saving history is now extremely easy as we only need to swap a few pointers
 - In the future each undo and redo will be implemented as (World, World) to match multiuser collab
 
