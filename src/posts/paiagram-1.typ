@@ -263,68 +263,67 @@ key--value storage #complexity-ftn. Accessing values stored in a `HashMap` is so
 `OrdMap`, but each key--value pair stored in OrdMap is always ordered (hence the name "Ord" Map),
 and this behaviour is more predictable than hashes. Additionally, because snowflake IDs start with
 timestamps, the pairs in the map are sorted based on the key's creation time.
+#footnote[
+  So this _is_ a Rust course eh?
 
-But before we talk about how this is useful, we'll have to take a short detour to...
+  This section is for people who don't know ownerships. If you are already comfortable with
+  ownerships, feel free to skip this footnote.
 
-== Ownership and Borrowing
+  _DISCLAIMER: I am not a professional Rust programmer, thus the following can contain error._
 
-... Ownership, which is Rust bros' favourite #footnote[So this _is_ a Rust course eh?].
+  Ownership is a bit of a complicated topic, and in order to understand the reason why OrdMap is
+  useful it is important to understand how ownerships work. While #link(
+    "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html",
+  )[the official documentation] has a thorough explanation on it, relevant to our situation, a
+  variable may _own_ or _borrow_ a piece of data. It is usually easier to work with _owned_ data
+  instead of _borrowed_ data, as owned data tend to have less lifetime issues. A full ownership of a
+  variable on a data usually implies the following:
 
-#let iterator-lifetimes-ftn = footnote[
-  This is not always the case (hence the "tend to have"). For example, creating a function that
-  returns an iterator that creates temporary _owned_ data could be quite complicated.
+  - The variable that owns the data can _read_ the data.
+  - The variable that owns the data can _mutate_ the data.
+  - The variable that owns the data can _transfer the ownership_, which includes destroying the
+    data. _Transferring data to a black hole._
+
+  And we can use the duck test on immutable data structures. Paiagram uses `OrdMap` (which will be
+  discussed in the next chapter). Say that there's a variable `x` that _holds_ an `OrdMap`:
+
+  - Can `x` read the data from the structure? Sure it can.
+  - Can `x` mutate the data? It can by doing the following:
+    - Creating a new clone of the data.
+    - Modifying the clone and let itself point to the new clone.
+  - Can `x` transfer the ownership to another variable? Sure it can.
+
+  #html.div(class: "mx-auto w-fit")[_IMAGE TODO, I will draw it myself_]
+
+  `OrdMap`, as well as many other data structures, behaves just like a standard `Vec` or `HashMap`
+  in terms of ownership.
+
+  In reality, the computer won't know when to clear each node, so each node carries a reference
+  counter. The counter shows how many datums #footnote[This is getting weirder.] still hold a
+  reference to the cons node. When the counter reaches 0, i.e., no datum references the cons node,
+  the computer frees up the memory occupied by the node. Of course, a cons list is not enough for
+  Paiagram.
+
+  Using such data structures makes some function signatures extremely simple: instead of having to
+  take a reference (immutable or mutable), any APIs that need to interact with the world can simply
+  _consume_ the world and take the ownership:
+
+
+  ```rust
+  // before
+  fn expensive_calc(world: &mut World) {
+      // oh... I can't send this to another thread unless I clone it or wrap it in Arc
+  }
+
+  // after
+  fn expensive_calc(world: World) {
+      // This is better; we still have to call .clone() somewhere,
+      // but it is cheap as everything is shared!
+  }
+  ```
+
+  It feels like a little deterministic garbage collector #emoji.face.beam.
 ]
-
-Ownership is a bit of a complicated topic, and #link(
-  "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html",
-)[the official documentation] has a thorough explanation on it. Relevant to our situation, a
-variable may _own_ or _borrow_ a piece of data, and it is usually easier to work with _owned_ data
-instead of _borrowed_ data, as owned data tend to have less lifetime issues #iterator-lifetimes-ftn.
-A full ownership of a variable on a data usually implies the following:
-
-- The context/variable that owns the data can _read_ the data.
-- The context/variable that owns the data can _mutate_ the data.
-- The context/variable that owns the data can _transfer the ownership_, which includes destroying
-  the data.
-
-And we can use the duck test on immutable data structures. Paiagram uses `OrdMap` (which will be
-discussed in the next chapter). Say that there's a variable `x` that _holds_ an `OrdMap`:
-
-- Can `x` read the data from the structure? Sure it can.
-- Can `x` mutate the data? It can by doing the following:
-  - Creating a new clone of the data.
-  - Modifying the clone and let itself point to the new clone.
-- Can `x` transfer the ownership to another variable? Sure it can.
-
-#html.div(class: "mx-auto w-fit")[_IMAGE TODO, I will draw it myself_]
-
-`OrdMap`, as well as many other data structures, behaves just like a `Vec` or a `HashMap`.
-
-In reality, the computer won't know when to clear each node, so each node carries a reference
-counter. The counter shows how many datums #footnote[This is getting weirder.] still hold a
-reference to the cons node. When the counter reaches 0, i.e., no datum references the cons node, the
-computer frees up the memory occupied by the node. Of course, a cons list is not enough for
-Paiagram.
-
-Using such data structures makes some function signatures extremely simple: instead of having to
-take a reference (immutable or mutable), any APIs that need to interact with the world can simply
-_consume_ the world and take the ownership:
-
-
-```rust
-// before
-fn expensive_calc(world: &mut World) {
-    // oh... I can't send this to another thread unless I clone it or wrap it in Arc
-}
-
-// after
-fn expensive_calc(world: World) {
-    // This is better; we still have to call .clone() somewhere,
-    // but it is cheap as everything is shared!
-}
-```
-
-It feels like a little deterministic garbage collector #emoji.face.beam.
 
 = Trunk
 
@@ -347,9 +346,9 @@ just before the world on the main thread gets replaced by the merged world. Sinc
 gets a copy of the main thread, the solution would be to send what's changed back to the main
 thread... Well we actually don't. Serialization is a big headache #emoji.face.frown #footnote[
   We will have to serialize the difference for multiuser collaboration though, as they come in and
-  out through network requests. I wonder if it would be a good idea to just serialize it, though.
-  This way we can use the same functions for handling data coming from a worker thread and data
-  coming from the network.
+  out through network requests. I wonder if it would be a good idea to just serialize the data
+  coming back from our local procedures, though. This way we can use the same functions for handling
+  data coming from a worker thread and data coming from the network.
   ```rust
   enum Difference {..}
   fn main_loop() {
@@ -362,6 +361,8 @@ thread... Well we actually don't. Serialization is a big headache #emoji.face.fr
   fn gen_difference_from_two_worlds((w1, w2): (World, World)) -> impl Iterator<Item = Diff(..)>;
   fn main_loop() {
       // we always get Difference<'static> from network_rx
+      // maybe even merge undo and redo in the same function
+      // as they are fundamentally just differences
       rx.recv_iter()
           .map(gen_difference_from_two_worlds)
           .chain(network_rx.recv_iter())
@@ -392,10 +393,38 @@ However, if two `OrdMap`s already share most of their contents, the iterator can
 pointers of their subtrees; if two subtrees have the same address, their contents must be the same.
 
 Although we must merge world states in the main thread, it is possible to parallelize this process,
-as the world is composed of several independent `OrdMap`s.
+as the world is composed of several independent `OrdMap`s. Unfortunately, it is impossible to
+prevent all state desyncs, and Paiagram simply lets the latest difference overwrite existing data in
+such cases.
 
-- Saving history is now extremely easy as we only need to swap a few pointers
-- In the future each undo and redo will be implemented as (World, World) to match multiuser collab
+== History
+
+I liked history classes in middle school. I also like the way history is managed with immutable data
+structures.
+
+Because the entire world is a set of immutable `OrdMap`s, each time the user performs an action, the
+app simply clones the current world and store it in the history stack. Because each edit only
+changes a limited amount of fields, and common structures are shared between `OrdMap`s, the cost of
+each historical snapshot becomes negligible. Every time the user hits redo, the app can simply swap
+the current world state with the previous historical state. #footnote[
+  Some single-file #strike[vibecoded] HTML editors also create snapshots for the world and store
+  them in a history stack... However they do this through `JSON.stringify` and `JSON.parse`. Umm I
+  believe there should be a better way to store the history other than storing the entire history in
+  a string right? Like have you guys heard of CRDTs? I know modern browsers are quite fast at
+  parsing JSON but what if your app gets very large? If a user stores a large image, how do you
+  serialize a `Uint8Array`? Base64 encoding? Oh I forgot the fact that you guys like SVGs so much
+  and there sure wouldn't be a case when we need to store images.
+
+  _DISCLAIMER: I don't really know what a CRDT is. From what I know it sounds like a flexible
+  JSON-like structure that shares history between copies. I might give it a try in the future._
+].
+
+Pretty cool right? Except Paiagram won't do that anymore.
+
+In the future, each undo and redo will be implemented as a
+```rust (PrevWorld, WorldWithEditApplied)``` tuple. We can process undos and redos the same way we
+process data coming from another thread and from the network. This way, not only can we simplify the
+code, it also prevents further desyncs.
 
 = One Year of Paiagram
 
