@@ -60,7 +60,7 @@ exit 0
       h.link(rel: "stylesheet", href: "/styles.css")
       h.elem("script", attrs: (
         defer: "",
-        src: "https://umami-theta-pink.vercel.app/script.js",
+        src: "https://stats.paiagram.com/script.js",
         data-website-id: "bbe83d2b-314a-4023-87e7-765f49b46a0c",
       ))
       h.title(page-title)
