@@ -112,6 +112,7 @@ benefits. I ended up with this:
 ```rust
 struct TripCollection {
     indexes: HashMap<TripKey, usize>,
+    keys: Vec<TripKey>,
     names: Vec<String>,
     schedules: Vec<TripSchedule>,
     service_classes: Vec<Option<ServiceClassKey>>,
@@ -427,6 +428,9 @@ process data coming from another thread and from the network. This way, not only
 code, it also prevents further desyncs.
 
 = One Year of Paiagram
+
+So that pretty much wraps up the main architectural changes in Paiagram since June. I was
+implementing most of the UX features before June. They probably deserve their separate blog post.
 
 I don't have much experience in writing large apps, nor am I familiar with Rust itself. Still, I
 found immutable data structures to be the only working solution for Paiagram's case. It is also a
